@@ -1,0 +1,24 @@
+* Orestes
+
+** matrix
+   - layer x row x column
+   - a row is a 16 bit value; each column is a bit
+   - a layer is just four rows
+
+** setup
+   - set all rows output low
+   - set all columns to input with pull-ups
+   - set matrix state to zero
+   - set layer to zero
+
+** scan
+   - for each row
+     - delay
+     - read columns for the current row
+     - check to see if this row has changed since the last read
+       - if so, set debounce for this row to cols; reset debounce counter
+     - if debounce counter
+       - decrement debounce counter
+       - if decremented to zero
+         - set the current matrix row to the last read value
+
