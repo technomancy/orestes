@@ -36,8 +36,28 @@ void push(cell c) {
   sp += CELL_SIZE;
 };
 
+void define(char * name, void (*body)(void)) {
+  dict * cp_prev = cp;
+
+  cp = (dict*)malloc(sizeof(dict));
+  cp->prev = cp_prev;
+  cp->name_size = strlen(name);
+  cp->name = name;
+  cp->code = (xt*) body;
+};
+
 
 // primitives
+
+cell drop(void) {
+  sp -= CELL_SIZE;
+  if(sp < s0) {
+    printf("Stack underflow\n");
+    sp = s0;
+    return 0;
+  }
+  return * sp;
+};
 
 void dot_s(void) {
   printf("<%d> ", (sp - s0) / CELL_SIZE);
@@ -115,16 +135,6 @@ void find(void) {
   push(0);
 };
 
-cell drop(void) {
-  sp -= CELL_SIZE;
-  if(sp < s0) {
-    printf("Stack underflow\n");
-    sp = s0;
-    return NULL;
-  }
-  return * sp;
-};
-
 void dup(void) {
   cell c = drop();
   push(c);
@@ -172,20 +182,20 @@ void interpret(void) {
 int main (void) {
   sp = s0 = malloc(MAX_STACK);
 
-  // manually create dictionary
-  cp = (dict*)malloc(sizeof(dict));
-  cp->prev = NULL;
-  cp->name_size = 2;
-  cp->name = ".s";
-  cp->code = (xt*) &dot_s;
+  // define primitives
+  define(".s", &dot_s);
+  define("drop", &drop);
+  define(">number", &to_number);
+  define("word", &word);
+  define("find", &find);
+  define("dup", &dup);
+  define("dup2", &dup2);
 
-  dict * cp_prev = cp;
+  define("fetch", &fetch);
+  define("store", &store);
 
-  cp = (dict*)malloc(sizeof(dict));
-  cp->prev = &cp_prev;
-  cp->name_size = 3;
-  cp->name = "dup";
-  cp->code = (xt*) &dup;
+  define("execute", &execute);
+  define("interpret", &interpret);
 
   while(*tib) {
     interpret();

@@ -30,8 +30,8 @@ I can write actual code.
    - ☑ push a number onto the stack
    - ☑ call a primitive
    - ☑ call a primitive with an arg
-   - ☐ easy way to load primitives into the dictionary
    - ☐ store and fetch
+   - ☑ easy way to load primitives into the dictionary
    - ☐ run on the board
    - ☐ LED blink
    - ☐ print over serial?
