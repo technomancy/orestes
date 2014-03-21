@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CELL_SIZE 2
+#define CELL_SIZE 4
 #define MAX_STACK 1024
 
-typedef short cell;
+typedef long cell;
 
 typedef cell xt;
 
@@ -23,12 +23,10 @@ typedef struct dictionary dict;
 
 cell * s0 = 0;
 
-void * ip = 0;
 dict * cp = 0;
 cell * sp = 0;
-cell * rp = 0;
 
-char * tib = "3211 .s";
+char * tib = "3211 dup .s";
 
 char state = 0;
 
@@ -38,6 +36,15 @@ char state = 0;
 void push(cell c) {
   * sp = c;
   sp += CELL_SIZE;
+};
+
+cell pop(void) {
+  sp -= CELL_SIZE;
+  if(sp < s0) {
+    printf("Stack underflow\n");
+    sp = s0;
+  }
+  return * sp;
 };
 
 
@@ -51,25 +58,84 @@ void dot_s(void) {
   printf("\n");
 };
 
-void number(void) {
+void to_number(void) { // c-addr1 u1 -- ud2 f
+  cell in_size = pop();
+  char * in = (char*) pop();
   cell n = 0;
-  int place = 1;
-  char * eos = 0;
-  char * i = 0;
 
-  for(eos = tib; *eos != 32; eos++) {}
-
-  for(i = eos - 1; i >= tib; i--) {
-    n += ((*i - 48) * place);
-    place = place * 10;
+  for(char * i = in; i < in_size + in; i++) {
+    if(*i >= 48 && *i < 58) {
+      n *= 10;
+      n += (*i - 48);
+    } else {
+      push(0);
+      return;
+    }
   }
 
-  tib = eos;
   push(n);
+  push(1);
 };
 
+void word(void) { // char -- c-addr u
+  cell delimiter = pop();
+  char * i = 0;
+
+  for(i = tib; *i != (char)delimiter; i++) {}
+
+  push(tib);
+  push(i - tib);
+  tib = i + 1;
+};
+
+void find(void) {
+  push(0);
+  return;
+
+  int target_size = pop();
+  char * target = pop();
+
+  for(dict * cur = cp; cur->prev; cur = cur->prev) {
+    if(target_size == cur->name_size) {
+      int mismatch = 0;
+      for(int i = 0; i < target_size; i++) {
+        if(*(cur->body + i) != *(target + i)) {
+          mismatch = 1;
+          break;
+        }
+      }
+
+      if(!mismatch) {
+        push(cur);
+        return;
+      }
+    }
+  }
+};
+
+void dup(void) {
+  cell c = pop();
+  push(c);
+  push(c);
+};
+
+void execute (void) {};
+
 void interpret(void) {
-  number();
+  push((cell)32);
+  word();
+
+  find();
+
+  if(pop()) {
+    execute();
+  } else {
+    to_number();
+    if(!pop()) {
+      printf("unknown thingy\n");
+    }
+  }
+
   printf(" ok\n");
 };
 
