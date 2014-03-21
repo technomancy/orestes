@@ -22,3 +22,20 @@
        - if decremented to zero
          - set the current matrix row to the last read value
 
+** steps
+   - [X] .s
+   - [X] push a number onto the stack
+   - [ ] call a primitive
+   - [ ] call a primitive with an arg
+   - [ ] run on the board
+   - [ ] print over serial?
+   - [ ] LED blink
+   - [ ] define a constant
+   - [ ] define a variable
+   - [ ] define a word
+   - [ ] key-driven LED
+   - [ ] send hard-coded USB key codes
+   - [ ] send key codes by column
+   - [ ] full matrix
+   - [ ] debounced matrix
+   - [ ] layered matrix
