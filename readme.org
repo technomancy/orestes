@@ -1,5 +1,8 @@
 * Orestes
 
+I need to implement a Forth so I can write firmware for my keyboard so
+I can write actual code.
+
 ** matrix
    - layer x row x column
    - a row is a 16 bit value; each column is a bit
@@ -23,19 +26,34 @@
          - set the current matrix row to the last read value
 
 ** steps
-   - [X] .s
-   - [X] push a number onto the stack
-   - [ ] call a primitive
-   - [ ] call a primitive with an arg
-   - [ ] run on the board
-   - [ ] print over serial?
-   - [ ] LED blink
-   - [ ] define a constant
-   - [ ] define a variable
-   - [ ] define a word
-   - [ ] key-driven LED
-   - [ ] send hard-coded USB key codes
-   - [ ] send key codes by column
-   - [ ] full matrix
-   - [ ] debounced matrix
-   - [ ] layered matrix
+   - ☑ .s
+   - ☑ push a number onto the stack
+   - ☑ call a primitive
+   - ☑ call a primitive with an arg
+   - ☐ easy way to load primitives into the dictionary
+   - ☐ store and fetch
+   - ☐ run on the board
+   - ☐ LED blink
+   - ☐ print over serial?
+   - ☐ define a constant
+   - ☐ define a variable
+   - ☐ define a word
+   - ☐ key-driven LED
+   - ☐ send hard-coded USB key codes
+   - ☐ send key codes by column
+   - ☐ full matrix
+   - ☐ debounced matrix
+   - ☐ layered matrix
+
+** missing primitives
+   - ☐ store
+   - ☐ fetch
+   - ☐ swap
+   - ☐ over
+   - ☐ if
+   - ☐ exit
+   - ☐ comma
+   - ☐ lit
+   - ☐ +
+   - ☐ =
+   - ☐ abort

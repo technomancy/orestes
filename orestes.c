@@ -1,5 +1,3 @@
-/* #include <avr/io.h> */
-/* #include <util/delay.h> */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -26,7 +24,7 @@ cell * s0 = 0;
 dict * cp = 0;
 cell * sp = 0;
 
-char * tib = "3211 dup .s";
+char * tib = "3211 dup .s ";
 
 char state = 0;
 
@@ -36,15 +34,6 @@ char state = 0;
 void push(cell c) {
   * sp = c;
   sp += CELL_SIZE;
-};
-
-cell pop(void) {
-  sp -= CELL_SIZE;
-  if(sp < s0) {
-    printf("Stack underflow\n");
-    sp = s0;
-  }
-  return * sp;
 };
 
 
@@ -59,8 +48,8 @@ void dot_s(void) {
 };
 
 void to_number(void) { // c-addr1 u1 -- ud2 f
-  cell in_size = pop();
-  char * in = (char*) pop();
+  cell in_size = drop();
+  char * in = (char*) drop();
   cell n = 0;
 
   for(char * i = in; i < in_size + in; i++) {
@@ -78,7 +67,7 @@ void to_number(void) { // c-addr1 u1 -- ud2 f
 };
 
 void word(void) { // char -- c-addr u
-  cell delimiter = pop();
+  cell delimiter = drop();
   char * i = 0;
 
   for(i = tib; *i != (char)delimiter; i++) {}
@@ -88,50 +77,89 @@ void word(void) { // char -- c-addr u
   tib = i + 1;
 };
 
-void find(void) {
-  push(0);
-  return;
+void string_eq(void) { // c1-addr u1 c2-addr u2 -- f
+  int c1_size = drop();
+  char * c1 = drop();
+  int c2_size = drop();
+  char * c2 = drop();
 
-  int target_size = pop();
-  char * target = pop();
-
-  for(dict * cur = cp; cur->prev; cur = cur->prev) {
-    if(target_size == cur->name_size) {
-      int mismatch = 0;
-      for(int i = 0; i < target_size; i++) {
-        if(*(cur->body + i) != *(target + i)) {
-          mismatch = 1;
-          break;
-        }
-      }
-
-      if(!mismatch) {
-        push(cur);
+  if(c1_size != c2_size) {
+    push(0);
+  } else {
+    for(int i = 0; i < c1_size; i++) {
+      if(*(c1 + i) != *(c2 + i)) {
+        push(0);
         return;
       }
     }
+    push(1);
   }
 };
 
+void find(void) {
+  cell target_size = drop();
+  cell target = drop();
+
+  for(dict * cur = cp; cur; cur = cur->prev) {
+    push(target);
+    push(target_size);
+    push(cur->name);
+    push(cur->name_size);
+    string_eq();
+
+    if(drop()) {
+      push(cur->code);
+      return;
+    }
+  }
+  push(0);
+};
+
+cell drop(void) {
+  sp -= CELL_SIZE;
+  if(sp < s0) {
+    printf("Stack underflow\n");
+    sp = s0;
+    return NULL;
+  }
+  return * sp;
+};
+
 void dup(void) {
-  cell c = pop();
+  cell c = drop();
   push(c);
   push(c);
 };
 
-void execute (void) {};
+void dup2(void) {
+  cell c1 = drop();
+  cell c2 = drop();
+  push(c2);
+  push(c1);
+  push(c2);
+  push(c1);
+};
+
+void execute (void) {
+  void (*primitive)(void) = drop();
+  (*primitive)();
+};
 
 void interpret(void) {
   push((cell)32);
   word();
 
+  dup2();
   find();
 
-  if(pop()) {
+  cell xt = drop();
+  if(xt) {
+    drop(); drop(); // drop dup'd word for to_number
+    push(xt);
     execute();
   } else {
     to_number();
-    if(!pop()) {
+    if(!drop()) {
       printf("unknown thingy\n");
     }
   }
@@ -144,6 +172,22 @@ void interpret(void) {
 int main (void) {
   sp = s0 = malloc(MAX_STACK);
 
-  interpret();
-  dot_s();
+  // manually create dictionary
+  cp = (dict*)malloc(sizeof(dict));
+  cp->prev = NULL;
+  cp->name_size = 2;
+  cp->name = ".s";
+  cp->code = (xt*) &dot_s;
+
+  dict * cp_prev = cp;
+
+  cp = (dict*)malloc(sizeof(dict));
+  cp->prev = &cp_prev;
+  cp->name_size = 3;
+  cp->name = "dup";
+  cp->code = (xt*) &dup;
+
+  while(*tib) {
+    interpret();
+  }
 };
