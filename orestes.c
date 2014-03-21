@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define CELL_SIZE 4
 #define MAX_STACK 1024
@@ -14,15 +15,14 @@ struct dictionary {
   char * name;
   xt * code;
   xt * body;
-  char immediate;
 };
 
 typedef struct dictionary dict;
 
-cell * s0 = 0;
+cell * s0 = NULL;
+cell * sp = NULL;
 
-dict * cp = 0;
-cell * sp = 0;
+dict * cp = NULL;
 
 char * tib = "3211 dup .s ";
 
@@ -86,6 +86,18 @@ void to_number(void) { // c-addr1 u1 -- ud2 f
   push(1);
 };
 
+void fetch(void) {
+  cell * target = (cell*)drop();
+  push(*target);
+};
+
+void store(void) {
+  cell * target = (cell*)drop();
+  cell value = drop();
+
+  *target = value;
+};
+
 void word(void) { // char -- c-addr u
   cell delimiter = drop();
   char * i = 0;
@@ -98,10 +110,10 @@ void word(void) { // char -- c-addr u
 };
 
 void string_eq(void) { // c1-addr u1 c2-addr u2 -- f
-  int c1_size = drop();
-  char * c1 = drop();
-  int c2_size = drop();
-  char * c2 = drop();
+  int c1_size = (int)drop();
+  char * c1 = (char*)drop();
+  int c2_size = (int)drop();
+  char * c2   = (char*)drop();
 
   if(c1_size != c2_size) {
     push(0);
@@ -200,4 +212,6 @@ int main (void) {
   while(*tib) {
     interpret();
   }
+
+  return 0;
 };
