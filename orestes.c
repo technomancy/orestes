@@ -23,7 +23,7 @@ cell * sp = NULL;
 
 dict * cp = NULL;
 
-char * tib = "3211 dup .s ";
+char * tib = "3211 dup + .s ";
 
 char state = 0;
 
@@ -166,6 +166,10 @@ void dup2(void) {
   push(c1);
 };
 
+void plus(void) {
+  push(drop() + drop());
+};
+
 void execute (void) {
   void (*primitive)(void) = drop();
   (*primitive)();
@@ -209,6 +213,8 @@ int main (void) {
 
   define("fetch", &fetch);
   define("store", &store);
+
+  define("+", &plus);
 
   define("execute", &execute);
   define("interpret", &interpret);
