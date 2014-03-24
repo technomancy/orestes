@@ -32,10 +32,14 @@ I can write actual code.
    - ☑ call a primitive with an arg
    - ☑ easy way to load primitives into the dictionary
    - ☑ store and fetch
+   - ☑ define a constant
+   - ☐ store and fetch single bytes
+   - ☐ conditions
+   - ☐ loops
+   - ☐ comments
    - ☐ run on the board
-   - ☐ LED blink
+   - ☐ LED button
    - ☐ print over serial?
-   - ☐ define a constant
    - ☐ define a variable
    - ☐ define a word
    - ☐ key-driven LED

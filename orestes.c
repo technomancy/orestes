@@ -1,19 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define MAX_STACK 256 // in bytes
 
+#define error printf
+#define d printf
+
 typedef int cell;
 
-typedef cell xt;
+enum entry_type {
+  PRIMITIVE,
+  IMMEDIATE,
+  CONSTANT,
+  VARIABLE
+};
 
 struct dictionary {
   struct dictionary * prev;
-  int name_size;
+  char name_size;
   char * name;
-  xt * code;
-  xt * body;
+  enum entry_type kind;
+  cell * body;
 };
 
 typedef struct dictionary dict;
@@ -23,31 +30,39 @@ cell * sp = NULL;
 
 dict * cp = NULL;
 
-char * tib = "3211 dup + .s ";
+char * tib = "3211 dup constant x x + x .s ";
 
 char state = 0;
 
 
 // helper functions
 
+// TODO: define this as taking a union type
 void push(cell c) {
   * sp = c;
   sp += sizeof(cell);
 };
 
-void define(char * name, void (*body)(void)) {
+void define(char * name, char name_size, enum entry_type kind, void * body) {
   dict * cp_prev = cp;
 
   cp = (dict*)malloc(sizeof(dict));
 
   if(cp != NULL) {
     cp->prev = cp_prev;
-    cp->name_size = strlen(name);
+    cp->name_size = name_size;
     cp->name = name;
-    cp->code = (xt*) body;
+    cp->body = (cell*) body;
+    cp->kind = kind;
   } else {
-    printf("oom");
+    error("oom\n");
   }
+};
+
+void define_primitive(char * name, void (*body)(void)) {
+  int length = 0;
+  for(length = 0; name[length]; length++) {}
+  define(name, length, PRIMITIVE, body);
 };
 
 
@@ -56,7 +71,7 @@ void define(char * name, void (*body)(void)) {
 cell drop(void) {
   sp -= sizeof(cell);
   if(sp < s0) {
-    printf("Stack underflow\n");
+    error("Stack underflow\n");
     sp = s0;
     return 0;
   }
@@ -106,6 +121,7 @@ void word(void) { // char -- c-addr u
   cell delimiter = drop();
   char * i = 0;
 
+  // TODO: need to allocate space for this once tib gets replaced
   for(i = tib; *i != (char)delimiter; i++) {}
 
   push(tib);
@@ -144,7 +160,8 @@ void find(void) {
     string_eq();
 
     if(drop()) {
-      push(cur->code);
+      push(cur->kind);
+      push(cur->body);
       return;
     }
   }
@@ -170,9 +187,26 @@ void plus(void) {
   push(drop() + drop());
 };
 
+void constant(void) {
+  cell value = drop();
+  push((cell)32);
+  word();
+  char name_size = (char)drop();
+  char * name = (char*)drop();
+  define(name, name_size, CONSTANT, value);
+};
+
 void execute (void) {
-  void (*primitive)(void) = drop();
-  (*primitive)();
+  enum entry_type kind = drop();
+
+  if(kind == PRIMITIVE) {
+    void (*primitive)(void) = drop();
+    (*primitive)();
+  } else if(kind == CONSTANT) {
+    // leave the body on the stack
+  } else {
+    error("Unknown type %s: %s.", kind, drop());
+  }
 };
 
 void interpret(void) {
@@ -182,15 +216,18 @@ void interpret(void) {
   dup2();
   find();
 
-  cell xt = drop();
-  if(xt) {
+  cell body = drop();
+
+  if(body) {
+    cell kind = drop();
     drop(); drop(); // drop dup'd word for to_number
-    push(xt);
+    push(body);
+    push(kind);
     execute();
   } else {
     to_number();
     if(!drop()) {
-      printf("unknown thingy\n");
+      error("unknown thingy\n");
     }
   }
 
@@ -203,21 +240,22 @@ int main (void) {
   sp = s0 = malloc(MAX_STACK);
 
   // define primitives
-  define(".s", &dot_s);
-  define("drop", &drop);
-  define(">number", &to_number);
-  define("word", &word);
-  define("find", &find);
-  define("dup", &dup);
-  define("dup2", &dup2);
+  define_primitive(".s", &dot_s);
+  define_primitive("drop", &drop);
+  define_primitive(">number", &to_number);
+  define_primitive("word", &word);
+  define_primitive("find", &find);
+  define_primitive("dup", &dup);
+  define_primitive("dup2", &dup2);
 
-  define("fetch", &fetch);
-  define("store", &store);
+  define_primitive("+", &plus);
 
-  define("+", &plus);
+  define_primitive("fetch", &fetch);
+  define_primitive("store", &store);
 
-  define("execute", &execute);
-  define("interpret", &interpret);
+  define_primitive("constant", &constant);
+  define_primitive("execute", &execute);
+  define_primitive("interpret", &interpret);
 
   while(*tib) {
     interpret();
