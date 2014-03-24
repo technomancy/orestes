@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CELL_SIZE 4
-#define MAX_STACK 1024
+#define MAX_STACK 256 // in bytes
 
-typedef long cell;
+typedef int cell;
 
 typedef cell xt;
 
@@ -33,24 +32,29 @@ char state = 0;
 
 void push(cell c) {
   * sp = c;
-  sp += CELL_SIZE;
+  sp += sizeof(cell);
 };
 
 void define(char * name, void (*body)(void)) {
   dict * cp_prev = cp;
 
   cp = (dict*)malloc(sizeof(dict));
-  cp->prev = cp_prev;
-  cp->name_size = strlen(name);
-  cp->name = name;
-  cp->code = (xt*) body;
+
+  if(cp != NULL) {
+    cp->prev = cp_prev;
+    cp->name_size = strlen(name);
+    cp->name = name;
+    cp->code = (xt*) body;
+  } else {
+    printf("oom");
+  }
 };
 
 
 // primitives
 
 cell drop(void) {
-  sp -= CELL_SIZE;
+  sp -= sizeof(cell);
   if(sp < s0) {
     printf("Stack underflow\n");
     sp = s0;
@@ -60,8 +64,8 @@ cell drop(void) {
 };
 
 void dot_s(void) {
-  printf("<%d> ", (sp - s0) / CELL_SIZE);
-  for(cell * i = s0; i < sp; i += CELL_SIZE) {
+  printf("<%d> ", (sp - s0) / sizeof(cell));
+  for(cell * i = s0; i < sp; i += sizeof(cell)) {
     printf("%d ", *i);
   }
   printf("\n");
