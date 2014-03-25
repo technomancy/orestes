@@ -21,7 +21,7 @@ struct dictionary {
   struct dictionary * prev;
   char name_size;
   char * name;
-  enum entry_type kind;
+  enum entry_type type;
   cell * body;
 };
 
@@ -46,7 +46,7 @@ void push(cell c) {
   sp += sizeof(cell);
 };
 
-void define(char * name, char name_size, enum entry_type kind, void * body) {
+void define(char * name, char name_size, enum entry_type type, void * body) {
   dict * cp_prev = cp;
 
   cp = (dict*)malloc(sizeof(dict));
@@ -56,7 +56,7 @@ void define(char * name, char name_size, enum entry_type kind, void * body) {
     cp->name_size = name_size;
     cp->name = name;
     cp->body = (cell*) body;
-    cp->kind = kind;
+    cp->type = type;
   } else {
     error("oom\n");
   }
@@ -163,7 +163,7 @@ void find(void) {
     string_eq();
 
     if(drop()) {
-      push(cur->kind);
+      push(cur->type);
       push(&cur->body);
       return;
     }
@@ -217,7 +217,7 @@ void colon(void) {
   defining->name = (char*)drop();
   // realloc this once we know the size
   defining->body = malloc(MAX_WORD_SIZE);
-  defining->kind = COLON;
+  defining->type = COLON;
 };
 
 void semicolon(void) {
@@ -229,19 +229,19 @@ void add_to_definition(void) {};
 void add_number_to_definition(void) {};
 
 void execute(void) {
-  enum entry_type kind = drop();
+  enum entry_type type = drop();
 
-  if(state && ! kind == IMMEDIATE) {
+  if(state && ! type == IMMEDIATE) {
     add_to_definition();
-  } else if(kind == PRIMITIVE || kind == IMMEDIATE) {
+  } else if(type == PRIMITIVE || type == IMMEDIATE) {
     void (*primitive)(void) = *(cell*)drop();
     (*primitive)();
-  } else if(kind == CONSTANT) {
+  } else if(type == CONSTANT) {
     push(*(cell*)drop());
-  } else if(kind == VARIABLE) {
+  } else if(type == VARIABLE) {
     // leave the body on the stack
   } else {
-    error("Unknown type %s: %s.", kind, drop());
+    error("Unknown type %s: %s.", type, drop());
   }
 };
 
@@ -255,10 +255,10 @@ void interpret(void) {
   cell * body = drop();
 
   if(body) {
-    cell kind = drop();
+    cell type = drop();
     drop(); drop(); // drop dup'd word for to_number
     push(body);
-    push(kind);
+    push(type);
     execute();
   } else {
     if(state) {
