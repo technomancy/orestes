@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #define MAX_STACK 256 // in bytes
+#define MAX_WORD_SIZE 64 // in bytes
 
 #define error printf
 #define d printf
@@ -12,7 +13,8 @@ enum entry_type {
   PRIMITIVE,
   IMMEDIATE,
   CONSTANT,
-  VARIABLE
+  VARIABLE,
+  COLON
 };
 
 struct dictionary {
@@ -29,6 +31,7 @@ cell * s0 = NULL;
 cell * sp = NULL;
 
 dict * cp = NULL;
+dict * defining = NULL;
 
 char * tib = "9 dup constant x variable y 3211 y ! x + y @ + .s ";
 
@@ -204,10 +207,33 @@ void variable(void) {
   define(name, name_size, VARIABLE, -1);
 };
 
-void execute (void) {
+void colon(void) {
+  state = 1;
+  push((cell)32);
+  word();
+
+  defining = (dict*)malloc(sizeof(dict));
+  defining->name_size = (char)drop();
+  defining->name = (char*)drop();
+  // realloc this once we know the size
+  defining->body = malloc(MAX_WORD_SIZE);
+  defining->kind = COLON;
+};
+
+void semicolon(void) {
+  state = 0;
+};
+
+void add_to_definition(void) {};
+
+void add_number_to_definition(void) {};
+
+void execute(void) {
   enum entry_type kind = drop();
 
-  if(kind == PRIMITIVE) {
+  if(state && ! kind == IMMEDIATE) {
+    add_to_definition();
+  } else if(kind == PRIMITIVE || kind == IMMEDIATE) {
     void (*primitive)(void) = *(cell*)drop();
     (*primitive)();
   } else if(kind == CONSTANT) {
@@ -235,9 +261,13 @@ void interpret(void) {
     push(kind);
     execute();
   } else {
-    to_number();
-    if(!drop()) {
-      error("unknown thingy\n");
+    if(state) {
+      add_number_to_definition();
+    } else {
+      to_number();
+      if(!drop()) {
+        error("unknown thingy\n");
+      }
     }
   }
 
@@ -267,6 +297,7 @@ int main (void) {
   define_primitive("variable", &variable);
   define_primitive("execute", &execute);
   define_primitive("interpret", &interpret);
+  define_primitive(",", &add_to_definition);
 
   while(*tib) {
     interpret();
