@@ -30,7 +30,7 @@ cell * sp = NULL;
 
 dict * cp = NULL;
 
-char * tib = "3211 dup constant x x + x .s ";
+char * tib = "9 dup constant x variable y 3211 y ! x + y @ + .s ";
 
 char state = 0;
 
@@ -161,7 +161,7 @@ void find(void) {
 
     if(drop()) {
       push(cur->kind);
-      push(cur->body);
+      push(&cur->body);
       return;
     }
   }
@@ -196,13 +196,23 @@ void constant(void) {
   define(name, name_size, CONSTANT, value);
 };
 
+void variable(void) {
+  push((cell)32);
+  word();
+  char name_size = (char)drop();
+  char * name = (char*)drop();
+  define(name, name_size, VARIABLE, -1);
+};
+
 void execute (void) {
   enum entry_type kind = drop();
 
   if(kind == PRIMITIVE) {
-    void (*primitive)(void) = drop();
+    void (*primitive)(void) = *(cell*)drop();
     (*primitive)();
   } else if(kind == CONSTANT) {
+    push(*(cell*)drop());
+  } else if(kind == VARIABLE) {
     // leave the body on the stack
   } else {
     error("Unknown type %s: %s.", kind, drop());
@@ -213,10 +223,10 @@ void interpret(void) {
   push((cell)32);
   word();
 
-  dup2();
+  dup2(); // keep it around in case it's a number
   find();
 
-  cell body = drop();
+  cell * body = drop();
 
   if(body) {
     cell kind = drop();
@@ -250,10 +260,11 @@ int main (void) {
 
   define_primitive("+", &plus);
 
-  define_primitive("fetch", &fetch);
-  define_primitive("store", &store);
+  define_primitive("@", &fetch);
+  define_primitive("!", &store);
 
   define_primitive("constant", &constant);
+  define_primitive("variable", &variable);
   define_primitive("execute", &execute);
   define_primitive("interpret", &interpret);
 

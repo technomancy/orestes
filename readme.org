@@ -33,16 +33,15 @@ I can write actual code.
    - ☑ easy way to load primitives into the dictionary
    - ☑ store and fetch
    - ☑ define a constant
-   - ☐ store and fetch single bytes
+   - ☑ define a variable
+   - ☐ define a word
    - ☐ conditions
    - ☐ loops
-   - ☐ comments
+   - ☐ store and fetch single bytes
    - ☐ run on the board
    - ☐ LED button
    - ☐ print over serial?
-   - ☐ define a variable
-   - ☐ define a word
-   - ☐ key-driven LED
+   - ☐ comments
    - ☐ send hard-coded USB key codes
    - ☐ send key codes by column
    - ☐ full matrix
@@ -50,8 +49,6 @@ I can write actual code.
    - ☐ layered matrix
 
 ** missing primitives
-   - ☐ store
-   - ☐ fetch
    - ☐ swap
    - ☐ over
    - ☐ if
