@@ -71,7 +71,7 @@ void define_primitive(char * name, void (*body)(void)) {
 };
 
 
-// primitives
+// stack and memory primitives
 
 cell drop(void) {
   sp--;
@@ -83,6 +83,21 @@ cell drop(void) {
   return * sp;
 };
 
+void dup(void) {
+  cell c = drop();
+  push(c);
+  push(c);
+};
+
+void dup2(void) {
+  cell c1 = drop();
+  cell c2 = drop();
+  push(c2);
+  push(c1);
+  push(c2);
+  push(c1);
+};
+
 void dot_s(void) {
   printf("<%d> ", (sp - s0) / sizeof(cell));
   for(cell * i = s0; i < sp; i++) {
@@ -90,6 +105,25 @@ void dot_s(void) {
   }
   printf("\n");
 };
+
+void fetch(void) {
+  cell * target = (cell*)drop();
+  push(*target);
+};
+
+void store(void) {
+  cell * target = (cell*)drop();
+  cell value = drop();
+
+  *target = value;
+};
+
+void plus(void) {
+  push(drop() + drop());
+};
+
+
+// parsing primitives
 
 void to_number(void) { // c-addr1 u1 -- ud2 f
   cell in_size = drop();
@@ -108,18 +142,6 @@ void to_number(void) { // c-addr1 u1 -- ud2 f
 
   push(n);
   push(1);
-};
-
-void fetch(void) {
-  cell * target = (cell*)drop();
-  push(*target);
-};
-
-void store(void) {
-  cell * target = (cell*)drop();
-  cell value = drop();
-
-  *target = value;
 };
 
 void word(void) { // char -- c-addr u
@@ -153,6 +175,9 @@ void string_eq(void) { // c1-addr u1 c2-addr u2 -- f
   }
 };
 
+
+// interpreter and compiler primitives
+
 void find(void) {
   cell target_size = drop();
   cell target = drop();
@@ -170,25 +195,6 @@ void find(void) {
     }
   }
   push(0);
-};
-
-void dup(void) {
-  cell c = drop();
-  push(c);
-  push(c);
-};
-
-void dup2(void) {
-  cell c1 = drop();
-  cell c2 = drop();
-  push(c2);
-  push(c1);
-  push(c2);
-  push(c1);
-};
-
-void plus(void) {
-  push(drop() + drop());
 };
 
 void literal(void) {
@@ -307,29 +313,27 @@ int main (void) {
   sp = s0 = malloc(MAX_STACK);
 
   // define primitives
-  define_primitive(".s", &dot_s);
   define_primitive("drop", &drop);
-  define_primitive(">number", &to_number);
-  define_primitive("word", &word);
-  define_primitive("find", &find);
   define_primitive("dup", &dup);
   define_primitive("dup2", &dup2);
-
-  define_primitive("+", &plus);
-
+  define_primitive(".s", &dot_s);
   define_primitive("@", &fetch);
   define_primitive("!", &store);
+  define_primitive("+", &plus);
 
+  define_primitive(">number", &to_number);
+  define_primitive("word", &word);
+  define_primitive("string=", &string_eq);
+
+  define_primitive("find", &find);
   define_primitive("literal", &literal);
   define_primitive("constant", &constant);
   define_primitive("variable", &variable);
   define_primitive(":", &colon);
+  define_primitive(";", &semicolon); cp->type = IMMEDIATE;
+  define_primitive(",", &add_to_definition);
   define_primitive("execute", &execute);
   define_primitive("interpret", &interpret);
-  define_primitive(",", &add_to_definition);
-
-  define_primitive(";", &semicolon);
-  cp->type = IMMEDIATE;
 
   while(*tib) {
     interpret();
