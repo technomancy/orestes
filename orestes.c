@@ -31,14 +31,13 @@ cell * s0 = NULL;
 cell * sp = NULL;
 
 dict * cp = NULL;
-dict * defining = NULL;
+dict * compiling = NULL;
 
 cell * ip = NULL;
 cell * dp = NULL;
 
-char * tib = "9 dup constant x variable y 3211 y ! x + y @ + .s ";
-
-char compiling = 0;
+char * tib = \
+  "9 dup constant x variable y : inc 1 + ; 3211 y ! x + y @ + inc .s ";
 
 
 // helper functions
@@ -46,7 +45,7 @@ char compiling = 0;
 // TODO: define this as taking a union type
 void push(cell c) {
   * sp = c;
-  sp += sizeof(cell);
+  sp++;
 };
 
 void define(char * name, char name_size, enum entry_type type, void * body) {
@@ -75,7 +74,7 @@ void define_primitive(char * name, void (*body)(void)) {
 // primitives
 
 cell drop(void) {
-  sp -= sizeof(cell);
+  sp--;
   if(sp < s0) {
     error("Stack underflow\n");
     sp = s0;
@@ -86,7 +85,7 @@ cell drop(void) {
 
 void dot_s(void) {
   printf("<%d> ", (sp - s0) / sizeof(cell));
-  for(cell * i = s0; i < sp; i += sizeof(cell)) {
+  for(cell * i = s0; i < sp; i++) {
     printf("%d ", *i);
   }
   printf("\n");
@@ -193,7 +192,8 @@ void plus(void) {
 };
 
 void literal(void) {
-  push(*(ip+sizeof(cell)));
+  ip++;
+  push(*ip);
 };
 
 void constant(void) {
@@ -214,49 +214,61 @@ void variable(void) {
 };
 
 void colon(void) {
-  compiling = 1;
   push((cell)32);
   word();
 
-  defining = (dict*)malloc(sizeof(dict));
-  defining->name_size = (char)drop();
-  defining->name = (char*)drop();
-  // realloc this once we know the size
-  defining->body = malloc(MAX_WORD_SIZE);
-  defining->type = COLON;
+  compiling = (dict*)malloc(sizeof(dict));
+  compiling->name_size = (char)drop();
+  compiling->name = (char*)drop();
+  compiling->body = malloc(MAX_WORD_SIZE);
+  compiling->type = COLON;
 
-  dp = defining->body;
+  dp = compiling->body;
 };
 
 void semicolon(void) {
-  compiling = 0;
+  compiling->prev = cp;
+  dp++;
+  *dp = NULL;
+  cp = compiling;
+  // TODO: realloc compiling->body to save unused space
+  compiling = dp = NULL;
 };
 
 void add_to_definition(void) {
   *dp = drop();
-  dp += sizeof(cell);
+  dp++;
+  if(dp > compiling->body + MAX_WORD_SIZE) {
+    error("definition too big");
+  }
 };
 
 void execute(void) {
   dict * entry = drop();
 
   if(compiling && ! entry->type == IMMEDIATE) {
+    push(entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
+    // d(" > %s\n", entry->name);
     void (*primitive)(void) = entry->body;
     (*primitive)();
   } else if(entry->type == COLON) {
-    // TODO
+    for(ip = entry->body; *ip; ip++) {
+      push(*ip);
+      execute();
+    }
   } else if(entry->type == CONSTANT) {
     push(entry->body);
   } else if(entry->type == VARIABLE) {
     push(&entry->body);
   } else {
-    error("Unknown type %s: %s.", entry->type, drop());
+    error("Unknown type %d\n", entry->type);
   }
 };
 
 void interpret(void) {
+  // dot_s();
   push((cell)32);
   word();
 
@@ -271,6 +283,11 @@ void interpret(void) {
     execute();
   } else {
     if(compiling) {
+      to_number();
+      drop();
+      push("literal");
+      push(7);
+      find();
       add_to_definition();
       add_to_definition();
     } else {
@@ -306,9 +323,13 @@ int main (void) {
   define_primitive("literal", &literal);
   define_primitive("constant", &constant);
   define_primitive("variable", &variable);
+  define_primitive(":", &colon);
   define_primitive("execute", &execute);
   define_primitive("interpret", &interpret);
   define_primitive(",", &add_to_definition);
+
+  define_primitive(";", &semicolon);
+  cp->type = IMMEDIATE;
 
   while(*tib) {
     interpret();

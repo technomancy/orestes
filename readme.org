@@ -34,7 +34,7 @@ I can write actual code.
    - ☑ store and fetch
    - ☑ define a constant
    - ☑ define a variable
-   - ☐ define a word
+   - ☑ define a word
    - ☐ conditions
    - ☐ loops
    - ☐ store and fetch single bytes
