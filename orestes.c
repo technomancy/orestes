@@ -33,9 +33,12 @@ cell * sp = NULL;
 dict * cp = NULL;
 dict * defining = NULL;
 
+cell * ip = NULL;
+cell * dp = NULL;
+
 char * tib = "9 dup constant x variable y 3211 y ! x + y @ + .s ";
 
-char state = 0;
+char compiling = 0;
 
 
 // helper functions
@@ -163,8 +166,7 @@ void find(void) {
     string_eq();
 
     if(drop()) {
-      push(cur->type);
-      push(&cur->body);
+      push(cur);
       return;
     }
   }
@@ -190,6 +192,10 @@ void plus(void) {
   push(drop() + drop());
 };
 
+void literal(void) {
+  push(*(ip+sizeof(cell)));
+};
+
 void constant(void) {
   cell value = drop();
   push((cell)32);
@@ -208,7 +214,7 @@ void variable(void) {
 };
 
 void colon(void) {
-  state = 1;
+  compiling = 1;
   push((cell)32);
   word();
 
@@ -218,30 +224,35 @@ void colon(void) {
   // realloc this once we know the size
   defining->body = malloc(MAX_WORD_SIZE);
   defining->type = COLON;
+
+  dp = defining->body;
 };
 
 void semicolon(void) {
-  state = 0;
+  compiling = 0;
 };
 
-void add_to_definition(void) {};
-
-void add_number_to_definition(void) {};
+void add_to_definition(void) {
+  *dp = drop();
+  dp += sizeof(cell);
+};
 
 void execute(void) {
-  enum entry_type type = drop();
+  dict * entry = drop();
 
-  if(state && ! type == IMMEDIATE) {
+  if(compiling && ! entry->type == IMMEDIATE) {
     add_to_definition();
-  } else if(type == PRIMITIVE || type == IMMEDIATE) {
-    void (*primitive)(void) = *(cell*)drop();
+  } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
+    void (*primitive)(void) = entry->body;
     (*primitive)();
-  } else if(type == CONSTANT) {
-    push(*(cell*)drop());
-  } else if(type == VARIABLE) {
-    // leave the body on the stack
+  } else if(entry->type == COLON) {
+    // TODO
+  } else if(entry->type == CONSTANT) {
+    push(entry->body);
+  } else if(entry->type == VARIABLE) {
+    push(&entry->body);
   } else {
-    error("Unknown type %s: %s.", type, drop());
+    error("Unknown type %s: %s.", entry->type, drop());
   }
 };
 
@@ -252,17 +263,16 @@ void interpret(void) {
   dup2(); // keep it around in case it's a number
   find();
 
-  cell * body = drop();
+  dict * entry = drop();
 
-  if(body) {
-    cell type = drop();
+  if(entry) {
     drop(); drop(); // drop dup'd word for to_number
-    push(body);
-    push(type);
+    push(entry);
     execute();
   } else {
-    if(state) {
-      add_number_to_definition();
+    if(compiling) {
+      add_to_definition();
+      add_to_definition();
     } else {
       to_number();
       if(!drop()) {
@@ -293,6 +303,7 @@ int main (void) {
   define_primitive("@", &fetch);
   define_primitive("!", &store);
 
+  define_primitive("literal", &literal);
   define_primitive("constant", &constant);
   define_primitive("variable", &variable);
   define_primitive("execute", &execute);
