@@ -5,7 +5,7 @@
 #define MAX_WORD_SIZE 64 // in bytes
 
 #define error printf
-#define d printf
+#define db printf
 
 typedef int cell;
 
@@ -36,8 +36,11 @@ dict * compiling = NULL;
 cell * ip = NULL;
 cell * dp = NULL;
 
+char skipping = 0;
+
 char * tib = \
-  "9 dup constant x variable y : inc 1 + ; 3211 y ! x + y @ + inc .s ";
+  "0 : hi if 12 32 + then 11 ; hi .s "; // should be 11
+  // "9 dup constant x variable y : inc 1 + ; 3211 y ! x + y @ + inc .s "; // 3230
 
 
 // helper functions
@@ -68,6 +71,31 @@ void define_primitive(char * name, void (*body)(void)) {
   int length = 0;
   for(length = 0; name[length]; length++) {}
   define(name, length, PRIMITIVE, body);
+};
+
+char check_for_done_skipping() {
+  dict * entry = drop();
+
+  db("entry %d\n", entry);
+  if(entry && entry->type == PRIMITIVE) {
+    // literals need an extra skip
+    push(entry->name);
+    push(entry->name_size);
+    push("literal");
+    push(7);
+    string_eq();
+    if(drop()) {
+      ip++;
+    }
+    push(entry->name);
+    push(entry->name_size);
+    push("then");
+    push(4);
+    string_eq();
+    return !drop();
+  } else {
+    return 1;
+  }
 };
 
 
@@ -176,6 +204,17 @@ void string_eq(void) { // c1-addr u1 c2-addr u2 -- f
 };
 
 
+// flow control primitives
+
+void iff(void) {
+  skipping = !drop();
+};
+
+void then(void) {
+  skipping = 0;
+};
+
+
 // interpreter and compiler primitives
 
 void find(void) {
@@ -199,7 +238,9 @@ void find(void) {
 
 void literal(void) {
   ip++;
+  db("lit\n");
   push(*ip);
+  db("plit\n");
 };
 
 void constant(void) {
@@ -256,13 +297,18 @@ void execute(void) {
     push(entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
-    // d(" > %s\n", entry->name);
+    db(" > %s\n", entry->name);
     void (*primitive)(void) = entry->body;
     (*primitive)();
   } else if(entry->type == COLON) {
     for(ip = entry->body; *ip; ip++) {
+      db("docolon %d %d\n", ip, skipping);
       push(*ip);
-      execute();
+      if(skipping) {
+        skipping = check_for_done_skipping();
+      } else {
+        execute();
+      }
     }
   } else if(entry->type == CONSTANT) {
     push(entry->body);
@@ -324,6 +370,9 @@ int main (void) {
   define_primitive(">number", &to_number);
   define_primitive("word", &word);
   define_primitive("string=", &string_eq);
+
+  define_primitive("if", &iff);
+  define_primitive("then", &then);
 
   define_primitive("find", &find);
   define_primitive("literal", &literal);

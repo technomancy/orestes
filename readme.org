@@ -35,7 +35,7 @@ I can write actual code.
    - ☑ define a constant
    - ☑ define a variable
    - ☑ define a word
-   - ☐ conditions
+   - ☑ conditions
    - ☐ loops
    - ☐ store and fetch single bytes
    - ☐ run on the board
