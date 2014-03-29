@@ -3,6 +3,8 @@
 I need to implement a Forth so I can write firmware for my keyboard so
 I can write actual code.
 
+Install =gcc-avr= and run =make test=.
+
 ** matrix
    - layer x row x column
    - a row is a 16 bit value; each column is a bit

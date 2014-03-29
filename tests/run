@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+executable=$1
+
+success=0
+
+tests="add no-conditional yes-conditional nested-if colon constvar"
+
+for test in $tests; do
+    echo "Testing $test..."
+    result=$(cat tests/${test}.fs | $executable || true)
+    if [ "$result" != "$(cat tests/$test)" ]; then
+        echo "   FAIL $test: ${!test}"
+        echo $result
+        success=1
+    fi
+done
+
+if [ $success -eq 0 ]; then
+    echo "Tests pass!"
+else
+    exit $success
+fi

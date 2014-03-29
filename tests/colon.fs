@@ -1,0 +1,1 @@
+6 : inc 1 + ; dup inc + .s

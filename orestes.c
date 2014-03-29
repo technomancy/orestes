@@ -259,7 +259,7 @@ void add_to_definition(void) {
 void execute(void) {
   dict * entry = drop();
 
-  if(compiling && ! entry->type == IMMEDIATE) {
+  if(compiling && entry->type != IMMEDIATE) {
     push(entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {

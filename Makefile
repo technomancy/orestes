@@ -14,13 +14,14 @@ local:
 	gcc -std=gnu99 -c $(TARGET).c -o $(TARGET).o
 	gcc $(TARGET).o -o $(TARGET)
 
-# avrdude -F -V -c arduino -p ATMEGA328P -P /dev/ttyACM0 -b 115200 -U flash:w:orestes.hex
-
 simulate: build
 	simulavr -d $(MCU) $(TARGET).hex
 
 upload: build
-	teensy_loader_cli -mmcu=$(MCU)
+	teensy_loader_cli -mmcu=$(MCU) $(TARGET).hex
 
 test: local
-	echo "12 44 .s + 8 .s + .s" | ./$(TARGET)
+	tests/run ./$(TARGET)
+
+clean:
+	rm -f $(TARGET).o $(TARGET).hex $(TARGET)
