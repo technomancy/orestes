@@ -40,12 +40,12 @@ Install =gcc-avr= and run =make test=.
    - ☑ conditions
    - ☑ null-terminated strings
    - ☑ read programs from stdin
-   - ☐ nested if
+   - ☑ nested if
+   - ☐ else
    - ☐ loops
    - ☐ run on the board
    - ☐ LED button
    - ☐ IO over serial?
-   - ☐ else
    - ☐ store and fetch single bytes
    - ☐ comments
    - ☐ send hard-coded USB key codes

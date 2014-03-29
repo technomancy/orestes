@@ -36,7 +36,8 @@ cell * dp = NULL;
 
 char * tib = NULL;
 
-char skipping = 0;
+short conditionals = 0xffff;
+char conditional_depth = 0;
 
 
 // helper functions
@@ -81,6 +82,20 @@ char check_for_done_skipping() {
   }
 };
 
+void run_body(dict * entry) {
+  for(ip = entry->body; *ip; ip++) {
+    push(*ip);
+    if((1 << conditional_depth) & conditionals) {
+      execute();
+    } else {
+      if(!check_for_done_skipping()) {
+        conditional_depth--;
+        conditionals = (1 << conditional_depth) | conditionals;
+      };
+    }
+  }
+};
+
 
 // stack and memory primitives
 
@@ -91,7 +106,7 @@ cell drop(void) {
     sp = s0;
     return 0;
   }
-  return * sp;
+  return *sp;
 };
 
 void dup(void) {
@@ -127,7 +142,7 @@ void plus(void) {
 
 // parsing primitives
 
-void to_number(void) { // c-addr1 u1 -- ud2 f
+void to_number(void) {
   char * in = (char*)drop();
   cell n = 0;
 
@@ -185,20 +200,28 @@ void string_eq(void) {
 // flow control primitives
 
 void iff(void) {
-  skipping = !drop();
+  conditional_depth++;
+  if(conditional_depth++ > 0xffff) {
+    error("if too nested\n");
+  } else {
+    if(drop()) { // there's surely a cleverer way to do this
+      conditionals = (1 << conditional_depth) | conditionals;
+    } else {
+      conditionals = (0 << conditional_depth) & conditionals;
+    }
+  }
 };
 
-void then(void) {
-  skipping = 0;
-};
+void then(void) {}; // placeholder
 
 
 // interpreter and compiler primitives
 
 void find(void) {
-  cell target = drop();
+  char * target = drop();
 
   for(dict * cur = cp; cur; cur = cur->prev) {
+
     push(target);
     push(cur->name);
     string_eq();
@@ -244,7 +267,8 @@ void semicolon(void) {
   dp++;
   *dp = NULL;
   cp = compiling;
-  // TODO: realloc compiling->body to save unused space
+  // TODO: this causes all kinds of segfaults
+  // realloc(cp->body, (db - (int)cp->body));
   compiling = dp = NULL;
 };
 
@@ -267,15 +291,8 @@ void execute(void) {
     void (*primitive)(void) = entry->body;
     (*primitive)();
   } else if(entry->type == COLON) {
-    for(ip = entry->body; *ip; ip++) {
-      push(*ip);
-      if(skipping) {
-        skipping = check_for_done_skipping();
-      } else {
-        // db(" :> %s\n", entry->name);
-        execute();
-      }
-    }
+    // db(" :> %s %d\n", entry->name, compiling);
+    run_body(entry);
   } else if(entry->type == CONSTANT) {
     push(entry->body);
   } else if(entry->type == VARIABLE) {
