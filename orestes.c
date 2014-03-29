@@ -205,7 +205,7 @@ void string_eq(void) {
 
 void iff(void) {
   conditional_depth++;
-  if(conditional_depth++ > 0xffff) {
+  if(conditional_depth++ > 15) {
     error("if too nested\n");
   } else {
     if(drop()) { // there's surely a cleverer way to do this
