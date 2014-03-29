@@ -95,7 +95,7 @@ void run_body(dict * entry) {
       execute();
     } else if(!check_for_done_skipping()) {
       conditional_depth--;
-      conditionals = (1 << conditional_depth) | conditionals;
+      conditionals |= (1 << conditional_depth);
     }
   }
 };
@@ -209,9 +209,9 @@ void iff(void) {
     error("if too nested\n");
   } else {
     if(drop()) { // there's surely a cleverer way to do this
-      conditionals = (1 << conditional_depth) | conditionals;
+      conditionals |= (1 << conditional_depth);
     } else {
-      conditionals = (0 << conditional_depth) & conditionals;
+      conditionals &= ~(1 << conditional_depth);
     }
   }
 };
