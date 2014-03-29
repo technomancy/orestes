@@ -38,7 +38,7 @@ cell * dp = NULL;
 
 char * tib = NULL;
 
-short conditionals = 0xffff;
+unsigned short conditionals = 0xffff;
 char conditional_depth = 0;
 
 
