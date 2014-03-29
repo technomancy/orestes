@@ -36,11 +36,14 @@ I can write actual code.
    - ☑ define a variable
    - ☑ define a word
    - ☑ conditions
+   - ☑ null-terminated strings
+   - ☐ read programs from stdin
    - ☐ loops
+   - ☐ else
    - ☐ store and fetch single bytes
    - ☐ run on the board
    - ☐ LED button
-   - ☐ print over serial?
+   - ☐ IO over serial?
    - ☐ comments
    - ☐ send hard-coded USB key codes
    - ☐ send key codes by column
