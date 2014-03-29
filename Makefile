@@ -21,3 +21,6 @@ simulate: build
 
 upload: build
 	teensy_loader_cli -mmcu=$(MCU)
+
+test: local
+	echo "12 44 .s + 8 .s + .s" | ./$(TARGET)

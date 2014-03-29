@@ -37,13 +37,14 @@ I can write actual code.
    - ☑ define a word
    - ☑ conditions
    - ☑ null-terminated strings
-   - ☐ read programs from stdin
+   - ☑ read programs from stdin
+   - ☐ nested if
    - ☐ loops
-   - ☐ else
-   - ☐ store and fetch single bytes
    - ☐ run on the board
    - ☐ LED button
    - ☐ IO over serial?
+   - ☐ else
+   - ☐ store and fetch single bytes
    - ☐ comments
    - ☐ send hard-coded USB key codes
    - ☐ send key codes by column

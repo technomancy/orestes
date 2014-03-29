@@ -34,16 +34,13 @@ dict * compiling = NULL;
 cell * ip = NULL;
 cell * dp = NULL;
 
-char * tib = \
-  "0 : hi if 12 32 + then 11 ; hi .s "; // should be 11
-  // "9 dup constant x variable y : inc 1 + ; 3211 y ! x + y @ + inc .s "; // 3230
+char * tib = NULL;
 
 char skipping = 0;
 
 
 // helper functions
 
-// TODO: define this as taking a union type
 void push(cell c) {
   * sp = c;
   sp++;
@@ -352,7 +349,11 @@ int main (void) {
   define("execute", PRIMITIVE, &execute);
   define("interpret", PRIMITIVE, &interpret);
 
-  while(*tib) {
-    interpret();
-  }
+  tib = malloc(80);
+
+  while(gets(tib)) {
+    while(*tib) {
+      interpret();
+    }
+  };
 };
