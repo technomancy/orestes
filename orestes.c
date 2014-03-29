@@ -18,12 +18,14 @@ enum entry_type {
   COLON
 };
 
-typedef struct {
-  struct dict * prev;
+struct dictionary {
+  struct dictionary * prev;
   enum entry_type type;
   char * name;
   cell * body;
-} dict;
+};
+
+typedef struct dictionary dict;
 
 cell * s0 = NULL;
 cell * sp = NULL;
@@ -42,6 +44,10 @@ char conditional_depth = 0;
 
 // helper functions
 
+void string_eq(void);
+cell drop(void);
+void execute(void);
+
 void push(cell c) {
   * sp = c;
   sp++;
@@ -55,7 +61,7 @@ void define(char * name, enum entry_type type, void * body) {
   if(cp != NULL) {
     cp->prev = cp_prev;
     cp->name = name;
-    cp->body = (cell*) body;
+    cp->body = body;
     cp->type = type;
   } else {
     error("oom\n");
@@ -63,11 +69,11 @@ void define(char * name, enum entry_type type, void * body) {
 };
 
 char check_for_done_skipping() {
-  dict * entry = drop();
+  dict * entry = (dict*)drop();
 
   if(entry && entry->type == PRIMITIVE) {
     // literals need an extra skip
-    push(entry->name);
+    push((cell)entry->name);
     push("literal");
     string_eq();
     if(drop()) {
@@ -87,11 +93,9 @@ void run_body(dict * entry) {
     push(*ip);
     if((1 << conditional_depth) & conditionals) {
       execute();
-    } else {
-      if(!check_for_done_skipping()) {
-        conditional_depth--;
-        conditionals = (1 << conditional_depth) | conditionals;
-      };
+    } else if(!check_for_done_skipping()) {
+      conditional_depth--;
+      conditionals = (1 << conditional_depth) | conditionals;
     }
   }
 };
@@ -218,10 +222,9 @@ void then(void) {}; // placeholder
 // interpreter and compiler primitives
 
 void find(void) {
-  char * target = drop();
+  char * target = (char*)drop();
 
   for(dict * cur = cp; cur; cur = cur->prev) {
-
     push(target);
     push(cur->name);
     string_eq();
@@ -242,13 +245,13 @@ void constant(void) {
   cell value = drop();
   word();
   char * name = (char*)drop();
-  define(name, CONSTANT, value);
+  define(name, CONSTANT, (cell*)value);
 };
 
 void variable(void) {
   word();
   char * name = (char*)drop();
-  define(name, VARIABLE, -1);
+  define(name, VARIABLE, (cell*)-1);
 };
 
 void colon(void) {
@@ -265,11 +268,12 @@ void colon(void) {
 void semicolon(void) {
   compiling->prev = cp;
   dp++;
-  *dp = NULL;
+  *dp = 0;
   cp = compiling;
   // TODO: this causes all kinds of segfaults
   // realloc(cp->body, (db - (int)cp->body));
-  compiling = dp = NULL;
+  compiling = NULL;
+  dp = NULL;
 };
 
 void add_to_definition(void) {
@@ -281,13 +285,14 @@ void add_to_definition(void) {
 };
 
 void execute(void) {
-  dict * entry = drop();
+  dict * entry = (dict*)drop();
 
   if(compiling && entry->type != IMMEDIATE) {
     push(entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
     // db(" p> %s\n", entry->name);
+    // TODO: cast here
     void (*primitive)(void) = entry->body;
     (*primitive)();
   } else if(entry->type == COLON) {
@@ -308,7 +313,7 @@ void interpret(void) {
 
   dup(); // keep it around in case it's a number
   find();
-  dict * entry = drop();
+  dict * entry = (dict*)drop();
 
   if(entry) {
     free((char *)drop());
