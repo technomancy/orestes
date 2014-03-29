@@ -38,7 +38,7 @@ cell * dp = NULL;
 
 char * tib = NULL;
 
-short conditionals = 0xffff;
+unsigned short conditionals = 0xffff;
 char conditional_depth = 0;
 
 
@@ -95,7 +95,7 @@ void run_body(dict * entry) {
       execute();
     } else if(!check_for_done_skipping()) {
       conditional_depth--;
-      conditionals = (1 << conditional_depth) | conditionals;
+      conditionals |= (1 << conditional_depth);
     }
   }
 };
@@ -205,13 +205,13 @@ void string_eq(void) {
 
 void iff(void) {
   conditional_depth++;
-  if(conditional_depth++ > 0xffff) {
+  if(conditional_depth++ > 15) {
     error("if too nested\n");
   } else {
     if(drop()) { // there's surely a cleverer way to do this
-      conditionals = (1 << conditional_depth) | conditionals;
+      conditionals |= (1 << conditional_depth);
     } else {
-      conditionals = (0 << conditional_depth) & conditionals;
+      conditionals &= ~(1 << conditional_depth);
     }
   }
 };
