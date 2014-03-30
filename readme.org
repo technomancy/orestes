@@ -43,10 +43,11 @@ Install =gcc-avr= and run =make test=.
    - ☑ nested if
    - ☑ else
    - ☑ loops
+   - ☑ store and fetch single bytes
+   - ☐ loop tests
    - ☐ run on the board
    - ☐ LED button
    - ☐ IO over serial?
-   - ☐ store and fetch single bytes
    - ☐ comments
    - ☐ send hard-coded USB key codes
    - ☐ send key codes by column

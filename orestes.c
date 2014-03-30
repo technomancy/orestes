@@ -146,9 +146,17 @@ void fetch(void) {
 
 void store(void) {
   cell * target = (cell*)drop();
-  cell value = drop();
+  *target = drop();
+};
 
-  *target = value;
+void fetch_byte(void) {
+  char * target = (char*)drop();
+  push(*target);
+};
+
+void store_byte(void) {
+  char * target = (char*)drop();
+  *target = drop();
 };
 
 void plus(void) {
@@ -412,6 +420,8 @@ int main (void) {
   define(".s", PRIMITIVE, &dot_s);
   define("@", PRIMITIVE, &fetch);
   define("!", PRIMITIVE, &store);
+  define("@c", PRIMITIVE, &fetch_byte);
+  define("!c", PRIMITIVE, &store_byte);
   define("+", PRIMITIVE, &plus);
 
   define(">number", PRIMITIVE, &to_number);
