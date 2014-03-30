@@ -337,8 +337,6 @@ void interpret(void) {
       }
     }
   }
-
-  out(" ok\n");
 };
 
 
@@ -377,5 +375,6 @@ int main (void) {
     while(*tib) {
       interpret();
     }
+    out(" ok\n");
   };
 };

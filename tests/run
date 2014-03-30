@@ -6,7 +6,7 @@ executable=$1
 
 success=0
 
-tests="add no-conditional yes-conditional nested-if colon constvar"
+tests="add no-conditional yes-conditional nested-if if-else colon constvar"
 
 for test in $tests; do
     echo "Testing $test..."
