@@ -42,7 +42,7 @@ Install =gcc-avr= and run =make test=.
    - ☑ read programs from stdin
    - ☑ nested if
    - ☑ else
-   - ☐ loops
+   - ☑ loops
    - ☐ run on the board
    - ☐ LED button
    - ☐ IO over serial?

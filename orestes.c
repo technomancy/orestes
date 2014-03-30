@@ -41,6 +41,11 @@ char * tib = NULL;
 unsigned short conditionals = 0xffff;
 char conditional_depth = 0;
 
+unsigned short loop_counters[16];
+unsigned short loop_limits[16];
+unsigned short loop_starts[16];
+char loop_depth = 0;
+
 
 // helper functions
 
@@ -211,7 +216,6 @@ void string_eq(void) {
 // flow control primitives
 
 void iff(void) {
-  conditional_depth++;
   if(conditional_depth++ > 15) {
     error("if too nested\n");
   } else {
@@ -230,6 +234,38 @@ void elsee(void) {
 void then(void) {
   conditional_depth--;
   conditionals |= (1 << conditional_depth);
+};
+
+void doo(void) {
+  if(loop_depth++ > 15) {
+    error("do too nested\n");
+  } else {
+    loop_counters[loop_depth] = drop();
+    loop_limits[loop_depth] = drop();
+    loop_starts[loop_depth] = ip;
+  }
+};
+
+void loop(void) {
+  if(loop_counters[loop_depth] != loop_limits[loop_depth]) {
+    loop_counters[loop_depth]++;
+    ip = loop_starts[loop_depth];
+  } else {
+    if(--loop_depth < 0) {
+      error("do/loop mismatch\n");
+    }
+  }
+};
+
+void i(void) {
+  push((cell)loop_counters[loop_depth]);
+};
+
+void j(void) {
+  push((cell)loop_counters[loop_depth - 1]);
+};
+void k(void) {
+  push((cell)loop_counters[loop_depth - 2]);
 };
 
 
@@ -373,6 +409,12 @@ int main (void) {
   define("if", PRIMITIVE, &iff);
   define("else", PRIMITIVE, &elsee);
   define("then", PRIMITIVE, &then);
+
+  define("do", PRIMITIVE, &doo);
+  define("loop", PRIMITIVE, &loop);
+  define("i", PRIMITIVE, &i);
+  define("j", PRIMITIVE, &j);
+  define("k", PRIMITIVE, &k);
 
   define("find", PRIMITIVE, &find);
   define("literal", PRIMITIVE, &literal);
