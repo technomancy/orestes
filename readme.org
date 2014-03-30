@@ -44,7 +44,6 @@ Install =gcc-avr= and run =make test=.
    - ☑ else
    - ☑ loops
    - ☑ store and fetch single bytes
-   - ☐ loop tests
    - ☐ run on the board
    - ☐ LED button
    - ☐ IO over serial?

@@ -410,6 +410,10 @@ void interpret(void) {
   }
 };
 
+void exitt(void) {
+  exit(0);
+};
+
 
 
 int main (void) {
@@ -451,6 +455,7 @@ int main (void) {
   define(",", PRIMITIVE, &add_to_definition);
   define("execute", PRIMITIVE, &execute);
   define("interpret", PRIMITIVE, &interpret);
+  define("exit", PRIMITIVE, &exitt);
 
   tib = malloc(80);
 
