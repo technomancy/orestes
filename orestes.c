@@ -43,7 +43,7 @@ char conditional_depth = 0;
 
 unsigned short loop_counters[16];
 unsigned short loop_limits[16];
-unsigned short loop_starts[16];
+cell loop_starts[16];
 char loop_depth = 0;
 
 
@@ -103,6 +103,7 @@ char unskip() {
 
 void run_body(dict * entry) {
   for(ip = entry->body; *ip; ip++) {
+    // db("running ip %d, %d\n", ip, *ip);
     push(*ip);
     if((1 << conditional_depth) & conditionals) {
       execute();
