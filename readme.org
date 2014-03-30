@@ -41,7 +41,7 @@ Install =gcc-avr= and run =make test=.
    - ☑ null-terminated strings
    - ☑ read programs from stdin
    - ☑ nested if
-   - ☐ else
+   - ☑ else
    - ☐ loops
    - ☐ run on the board
    - ☐ LED button

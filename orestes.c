@@ -68,7 +68,7 @@ void define(char * name, enum entry_type type, void * body) {
   }
 };
 
-char check_for_done_skipping() {
+char unskip() {
   dict * entry = (dict*)drop();
 
   if(entry && entry->type == PRIMITIVE) {
@@ -78,13 +78,21 @@ char check_for_done_skipping() {
     string_eq();
     if(drop()) {
       ip++;
+    } else {
+      push(entry->name);
+      push("then");
+      string_eq();
+      if(drop()) {
+        then();
+      } else {
+        push(entry->name);
+        push("else");
+        string_eq();
+        if(drop()) {
+          elsee();
+        }
+      }
     }
-    push(entry->name);
-    push("then");
-    string_eq();
-    return !drop();
-  } else {
-    return 1;
   }
 };
 
@@ -93,9 +101,8 @@ void run_body(dict * entry) {
     push(*ip);
     if((1 << conditional_depth) & conditionals) {
       execute();
-    } else if(!check_for_done_skipping()) {
-      conditional_depth--;
-      conditionals |= (1 << conditional_depth);
+    } else {
+      unskip();
     }
   }
 };
@@ -216,7 +223,14 @@ void iff(void) {
   }
 };
 
-void then(void) {}; // placeholder
+void elsee(void) {
+  conditionals ^= (1 << conditional_depth);
+};
+
+void then(void) {
+  conditional_depth--;
+  conditionals |= (1 << conditional_depth);
+};
 
 
 // interpreter and compiler primitives
@@ -357,6 +371,7 @@ int main (void) {
   define("string=", PRIMITIVE, &string_eq);
 
   define("if", PRIMITIVE, &iff);
+  define("else", PRIMITIVE, &elsee);
   define("then", PRIMITIVE, &then);
 
   define("find", PRIMITIVE, &find);
