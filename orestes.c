@@ -268,6 +268,18 @@ void k(void) {
   push((cell)loop_counters[loop_depth - 2]);
 };
 
+void begin (void) {
+  if(loop_depth++ > 15) {
+    error("do too nested\n");
+  } else {
+    loop_starts[loop_depth] = ip;
+  }
+};
+
+void again(void) {
+  ip = loop_starts[loop_depth];
+};
+
 
 // interpreter and compiler primitives
 
@@ -415,6 +427,9 @@ int main (void) {
   define("i", PRIMITIVE, &i);
   define("j", PRIMITIVE, &j);
   define("k", PRIMITIVE, &k);
+
+  define("begin", PRIMITIVE, &begin);
+  define("again", PRIMITIVE, &again);
 
   define("find", PRIMITIVE, &find);
   define("literal", PRIMITIVE, &literal);
