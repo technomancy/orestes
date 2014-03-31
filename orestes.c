@@ -43,7 +43,7 @@ char conditional_depth = 0;
 
 unsigned short loop_counters[16];
 unsigned short loop_limits[16];
-cell loop_starts[16];
+cell * loop_starts[16];
 char loop_depth = 0;
 
 
@@ -52,6 +52,8 @@ char loop_depth = 0;
 void string_eq(void);
 cell drop(void);
 void execute(void);
+void then(void);
+void elsee(void);
 
 void push(cell c) {
   * sp = c;
@@ -132,6 +134,21 @@ void dup(void) {
   push(c);
 };
 
+void swap(void) {
+  cell c1 = drop();
+  cell c2 = drop();
+  push(c1);
+  push(c2);
+};
+
+void over(void) {
+  cell c1 = drop();
+  cell c2 = drop();
+  push(c2);
+  push(c1);
+  push(c2);
+};
+
 void dot_s(void) {
   out("<%d> ", sp - s0);
   for(cell * i = s0; i < sp; i++) {
@@ -162,6 +179,26 @@ void store_byte(void) {
 
 void plus(void) {
   push(drop() + drop());
+};
+
+void minus(void) {
+  push(drop() - drop());
+};
+
+void orr(void) {
+  push(drop() | drop());
+}
+
+void andd(void) {
+  push(drop() & drop());
+}
+
+void nott(void) {
+  push(~drop());
+}
+
+void equals(void) {
+  push(drop() == drop());
 };
 
 
@@ -422,12 +459,20 @@ int main (void) {
   // define primitives
   define("drop", PRIMITIVE, &drop);
   define("dup", PRIMITIVE, &dup);
+  define("swap", PRIMITIVE, &swap);
+  define("over", PRIMITIVE, &over);
   define(".s", PRIMITIVE, &dot_s);
   define("@", PRIMITIVE, &fetch);
   define("!", PRIMITIVE, &store);
   define("@c", PRIMITIVE, &fetch_byte);
   define("!c", PRIMITIVE, &store_byte);
+
   define("+", PRIMITIVE, &plus);
+  define("-", PRIMITIVE, &minus);
+  define("or", PRIMITIVE, &orr);
+  define("and", PRIMITIVE, &andd);
+  define("not", PRIMITIVE, &nott);
+  define("=", PRIMITIVE, &equals);
 
   define(">number", PRIMITIVE, &to_number);
   define("word", PRIMITIVE, &word);
