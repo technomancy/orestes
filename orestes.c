@@ -161,9 +161,9 @@ void over(void) {
 };
 
 void dot_s(void) {
-  out("<%d> ", stack.c - stack_start.c);
+  out("<%ld> ", stack.c - stack_start.c);
   for(cell i = stack_start; i.i < stack.i; i.c++) {
-    out("%d ", *(i.c));
+    out("%u ", i.c->i);
   }
   out("\n");
 };
