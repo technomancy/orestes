@@ -2,13 +2,11 @@
 #include <stdlib.h>
 
 #define MAX_STACK 256 // in bytes
-#define MAX_WORD_SIZE 64 // in bytes
+#define MAX_WORD_SIZE 128 // in bytes
 
 #define error printf
 #define db printf
 #define out printf
-
-typedef int cell;
 
 enum entry_type {
   PRIMITIVE,
@@ -18,32 +16,46 @@ enum entry_type {
   COLON
 };
 
+struct dictionary;
+union cell;
+typedef union cell_t cell;
+
+union cell_t {
+  unsigned int i;
+  cell * c;
+  char * s;
+  char ch;
+  struct dictionary * d;
+  void * v;
+  int this_is_here_to_spoon_feed_the_compiler_yay;
+};
+
 struct dictionary {
   struct dictionary * prev;
   enum entry_type type;
   char * name;
-  cell * body;
+  cell body;
 };
 
 typedef struct dictionary dict;
 
-cell * s0 = NULL;
-cell * sp = NULL;
+cell stack_start = { .i = 0 };
+cell stack = { .i = 0 };
 
-dict * cp = NULL;
+dict * cp = NULL; // last word to be defined
 dict * compiling = NULL;
 
-cell * ip = NULL;
-cell * dp = NULL;
+cell ip = { .i = 0 }; // instruction pointer (while executing word body)
+cell dp = { .i = 0 }; // definition pointer (while adding to word definitions)
 
-char * tib = NULL;
+char * input = NULL;
 
 unsigned short conditionals = 0xffff;
 char conditional_depth = 0;
 
-unsigned short loop_counters[16];
-unsigned short loop_limits[16];
-cell * loop_starts[16];
+unsigned int loop_counters[16];
+unsigned int loop_limits[16];
+cell loop_starts[16];
 char loop_depth = 0;
 
 
@@ -56,8 +68,8 @@ void then(void);
 void elsee(void);
 
 void push(cell c) {
-  * sp = c;
-  sp++;
+  *stack.c = (cell)(c.i);
+  stack.c++;
 };
 
 void define(char * name, enum entry_type type, void * body) {
@@ -68,34 +80,34 @@ void define(char * name, enum entry_type type, void * body) {
   if(cp != NULL) {
     cp->prev = cp_prev;
     cp->name = name;
-    cp->body = body;
+    cp->body.c = (cell*)body;
     cp->type = type;
   } else {
     error("oom\n");
   }
 };
 
-char unskip() {
-  dict * entry = (dict*)drop();
+char maybe_unskip() {
+  dict * entry = drop().d;
 
   if(entry && entry->type == PRIMITIVE) {
     // literals need an extra skip
     push((cell)entry->name);
-    push("literal");
+    push((cell)"literal");
     string_eq();
-    if(drop()) {
-      ip++;
+    if(drop().i) {
+      ip.c++;
     } else {
-      push(entry->name);
-      push("then");
+      push((cell)entry->name);
+      push((cell)"then");
       string_eq();
-      if(drop()) {
+      if(drop().i) {
         then();
       } else {
-        push(entry->name);
-        push("else");
+        push((cell)entry->name);
+        push((cell)"else");
         string_eq();
-        if(drop()) {
+        if(drop().i) {
           elsee();
         }
       }
@@ -104,13 +116,13 @@ char unskip() {
 };
 
 void run_body(dict * entry) {
-  for(ip = entry->body; *ip; ip++) {
-    // db("running ip %d, %d\n", ip, *ip);
-    push(*ip);
+  for(ip.c = entry->body.c; ip.c->i; ip.c++) {
+    // db("running ip %d, %d\n", ip.i, ip.c->c);
+    push((cell)ip.c->c);
     if((1 << conditional_depth) & conditionals) {
       execute();
     } else {
-      unskip();
+      maybe_unskip();
     }
   }
 };
@@ -119,13 +131,12 @@ void run_body(dict * entry) {
 // stack and memory primitives
 
 cell drop(void) {
-  sp--;
-  if(sp < s0) {
+  stack.c--;
+  if(stack.i < stack_start.i) {
     error("Stack underflow\n");
-    sp = s0;
-    return 0;
+    stack = stack_start;
   }
-  return *sp;
+  return *stack.c;
 };
 
 void dup(void) {
@@ -150,78 +161,78 @@ void over(void) {
 };
 
 void dot_s(void) {
-  out("<%d> ", sp - s0);
-  for(cell * i = s0; i < sp; i++) {
-    out("%d ", *i);
+  out("<%d> ", stack.c - stack_start.c);
+  for(cell i = stack_start; i.i < stack.i; i.c++) {
+    out("%d ", *(i.c));
   }
   out("\n");
 };
 
 void fetch(void) {
-  cell * target = (cell*)drop();
-  push(*target);
+  cell target = drop();
+  push(*target.c);
 };
 
 void store(void) {
-  cell * target = (cell*)drop();
-  *target = drop();
+  cell target = drop();
+  *(target.c) = drop();
 };
 
 void fetch_byte(void) {
-  char * target = (char*)drop();
-  push(*target);
+  char b = drop().s[0];
+  push((cell)b);
 };
 
 void store_byte(void) {
-  char * target = (char*)drop();
-  *target = drop();
+  char * target = drop().s;
+  *target = drop().ch;
 };
 
 void plus(void) {
-  push(drop() + drop());
+  push((cell)(drop().i + drop().i));
 };
 
 void minus(void) {
-  push(drop() - drop());
+  push((cell)(drop().i - drop().i));
 };
 
 void orr(void) {
-  push(drop() | drop());
+  push((cell)(drop().i | drop().i));
 }
 
 void andd(void) {
-  push(drop() & drop());
+  push((cell)(drop().i & drop().i));
 }
 
 void nott(void) {
-  push(~drop());
+  push((cell)(~drop().i));
 }
 
 void equals(void) {
-  push(drop() == drop());
+  push((cell)(drop().i == drop().i));
 };
 
 
 // parsing primitives
 
 void to_number(void) {
-  char * in = (char*)drop();
-  cell n = 0;
+  char * in = drop().s;
+  cell n = {.i = 0};
 
   for(char i = 0; in[i]; i++) {
     if(in[i] >= 48 && in[i] < 58) {
-      n *= 10;
-      n += (in[i] - 48);
+      n.i *= 10;
+      n.i += (in[i] - 48);
     } else {
       free(in);
-      push(0);
+      push((cell)0);
       return;
     }
   }
 
   free(in);
   push(n);
-  push(1);
+  push((cell)1);
 };
 
 void word(void) {
@@ -229,33 +240,33 @@ void word(void) {
   char * new_str = 0;
 
   // skip till space or newline or null
-  while(tib[i] != 32 && tib[i] != 10 && tib[i]) { i++; };
+  while(input[i] != 32 && input[i] != 10 && input[i]) { i++; };
   i++;
 
   if(new_str = malloc(i)) {
     for(char j = 0; j < i - 1; j++) {
-      new_str[j] = tib[j];
+      new_str[j] = input[j];
     }
     new_str[i] = 0; // slap a null terminator on
 
-    push(new_str);
-    tib += i;
+    push((cell)new_str);
+    input += i;
   } else {
     error("oom\n");
   }
 };
 
 void string_eq(void) {
-  char * c1 = (char*)drop();
-  char * c2 = (char*)drop();
+  char * c1 = drop().s;
+  char * c2 = drop().s;
 
   for(int i = 0; c1[i] || c2[i]; i++) {
     if(c1[i] != c2[i]) {
-      push(0);
+      push((cell)0);
       return;
     }
   }
-  push(1);
+  push((cell)1);
 };
 
 
@@ -265,7 +276,7 @@ void iff(void) {
   if(conditional_depth++ > 15) {
     error("if too nested\n");
   } else {
-    if(drop()) { // there's surely a cleverer way to do this
+    if(drop().i) { // there's surely a cleverer way to do this
       conditionals |= (1 << conditional_depth);
     } else {
       conditionals &= ~(1 << conditional_depth);
@@ -286,8 +297,8 @@ void doo(void) {
   if(loop_depth++ > 15) {
     error("do too nested\n");
   } else {
-    loop_counters[loop_depth] = drop();
-    loop_limits[loop_depth] = drop();
+    loop_counters[loop_depth] = drop().i;
+    loop_limits[loop_depth] = drop().i;
     loop_starts[loop_depth] = ip;
   }
 };
@@ -330,35 +341,35 @@ void again(void) {
 // interpreter and compiler primitives
 
 void find(void) {
-  char * target = (char*)drop();
+  char * target = drop().s;
 
   for(dict * cur = cp; cur; cur = cur->prev) {
-    push(target);
-    push(cur->name);
+    push((cell)target);
+    push((cell)cur->name);
     string_eq();
-    if(drop()) {
-      push(cur);
+    if(drop().i) {
+      push((cell)cur);
       return;
     }
   }
-  push(0);
+  push((cell)0);
 };
 
 void literal(void) {
-  ip++;
-  push(*ip);
+  ip.c++;
+  push((cell)ip.c->i);
 };
 
 void constant(void) {
   cell value = drop();
   word();
-  char * name = (char*)drop();
-  define(name, CONSTANT, (cell*)value);
+  char * name = drop().s;
+  define(name, CONSTANT, value.c);
 };
 
 void variable(void) {
   word();
-  char * name = (char*)drop();
+  char * name = drop().s;
   define(name, VARIABLE, (cell*)-1);
 };
 
@@ -366,42 +377,39 @@ void colon(void) {
   word();
 
   compiling = (dict*)malloc(sizeof(dict));
-  compiling->name = (char*)drop();
-  compiling->body = malloc(MAX_WORD_SIZE);
+  compiling->name = drop().s;
+  compiling->body.c = malloc(MAX_WORD_SIZE);
   compiling->type = COLON;
 
-  dp = compiling->body;
+  dp.c = compiling->body.c;
 };
 
 void semicolon(void) {
   compiling->prev = cp;
-  dp++;
-  *dp = 0;
+  dp.d++;
   cp = compiling;
   // TODO: this causes all kinds of segfaults
   // realloc(cp->body, (db - (int)cp->body));
   compiling = NULL;
-  dp = NULL;
 };
 
 void add_to_definition(void) {
-  *dp = drop();
-  dp++;
-  if(dp > compiling->body + MAX_WORD_SIZE) {
-    error("definition too big");
+  *(dp.c) = (cell)drop();
+  dp.c++;
+  if(dp.i > compiling->body.i + MAX_WORD_SIZE) {
+    error("definition too big\n");
   }
 };
 
 void execute(void) {
-  dict * entry = (dict*)drop();
+  dict * entry = drop().d;
 
   if(compiling && entry->type != IMMEDIATE) {
-    push(entry);
+    push((cell)entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
     // db(" p> %s\n", entry->name);
-    // TODO: cast here
-    void (*primitive)(void) = entry->body;
+    void (*primitive)(void) = entry->body.v;
     (*primitive)();
   } else if(entry->type == COLON) {
     // db(" :> %s %d\n", entry->name, compiling);
@@ -409,7 +417,7 @@ void execute(void) {
   } else if(entry->type == CONSTANT) {
     push(entry->body);
   } else if(entry->type == VARIABLE) {
-    push(&entry->body);
+    push((cell)&entry->body);
   } else {
     error("Unknown type %d\n", entry->type);
   }
@@ -421,26 +429,26 @@ void interpret(void) {
 
   dup(); // keep it around in case it's a number
   find();
-  dict * entry = (dict*)drop();
+  dict * entry = drop().d;
 
   if(entry) {
-    free((char *)drop());
-    push(entry);
+    free(drop().s);
+    push((cell)entry);
     execute();
   } else {
     if(compiling) {
       to_number();
-      if(!drop()) {
+      if(!drop().i) {
         error("unknown thingy\n");
       } else {
-        push("literal");
+        push((cell)"literal");
         find();
         add_to_definition();
         add_to_definition();
       }
     } else {
       to_number();
-      if(!drop()) {
+      if(!drop().i) {
         error("unknown thingy\n");
       }
     }
@@ -454,7 +462,7 @@ void exitt(void) {
 
 
 int main (void) {
-  sp = s0 = malloc(MAX_STACK);
+  stack.v = stack_start.v = malloc(MAX_STACK);
 
   // define primitives
   define("drop", PRIMITIVE, &drop);
@@ -502,10 +510,10 @@ int main (void) {
   define("interpret", PRIMITIVE, &interpret);
   define("exit", PRIMITIVE, &exitt);
 
-  tib = malloc(80);
+  input = malloc(80);
 
-  while(gets(tib)) {
-    while(*tib) {
+  while(gets(input)) {
+    while(*input) {
       interpret();
     }
     out(" ok\n");
