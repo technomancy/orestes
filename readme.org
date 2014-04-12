@@ -44,12 +44,13 @@ Install =gcc-avr= and run =make test=.
    - ☑ else
    - ☑ loops
    - ☑ store and fetch single bytes
-   - ☐ run on the board
-   - ☐ LED button
-   - ☐ IO over serial?
-   - ☐ comments
-   - ☐ send hard-coded USB key codes
+   - ☑ run on the board
+   - ☑ LED blink
+   - ☑ send hard-coded USB key codes
+   - ☐ send hard-coded USB key codes from forth
    - ☐ send key codes by column
+   - ☐ read forth source from separate file instead of inline strings
+   - ☐ comments
    - ☐ full matrix
    - ☐ debounced matrix
    - ☐ layered matrix

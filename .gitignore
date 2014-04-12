@@ -1,3 +1,5 @@
 /orestes
 /orestes.hex
 /orestes.o
+/usb_keyboard.o
+/orestes_avr.o

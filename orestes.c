@@ -1,20 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "orestes.h"
+
 #define MAX_STACK 256 // in bytes
 #define MAX_WORD_SIZE 128 // in bytes
 
 #define error printf
 #define db printf
 #define out printf
-
-enum entry_type {
-  PRIMITIVE,
-  IMMEDIATE,
-  CONSTANT,
-  VARIABLE,
-  COLON
-};
 
 struct dictionary;
 union cell;
@@ -461,7 +455,7 @@ void exitt(void) {
 
 
 
-int main (void) {
+void primitives (void) {
   stack.v = stack_start.v = malloc(MAX_STACK);
 
   // define primitives
@@ -509,7 +503,11 @@ int main (void) {
   define("execute", PRIMITIVE, &execute);
   define("interpret", PRIMITIVE, &interpret);
   define("exit", PRIMITIVE, &exitt);
+};
 
+#ifndef F_CPU
+int main(void) {
+  primitives();
   input = malloc(80);
 
   while(gets(input)) {
@@ -519,3 +517,4 @@ int main (void) {
     out(" ok\n");
   };
 };
+#endif
