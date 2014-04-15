@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdlib.h>
 
 #include "usb_keyboard.h"
 #include "orestes.h"
@@ -70,8 +71,20 @@ void out(char * s) {
   usb_keyboard_press(KEY_SPACE, 0);
 };
 
+void send_int(void) {
+  char * s = malloc(8);
+  itoa(drop().i, s, 10);
+  for(int i = 0; s[i]; i++) {
+    usb_keyboard_press(s[i] - 19, 0);
+  }
+
+  usb_keyboard_press(KEY_SPACE, 0);
+  usb_keyboard_press(KEY_SLASH, 0);
+  usb_keyboard_press(KEY_SPACE, 0);
+};
+
 void send(void) {
-  usb_keyboard_send();
+  usb_keyboard_press(drop().i, keyboard_modifier_keys);
 };
 
 void run(char * s) {
@@ -89,9 +102,9 @@ int main (void) {
   while (!usb_configured()) /* wait */ ;
   (DDRD |= (1<<6));
 
-  /* define("portb", CONSTANT, (int)PORTB); */
-  /* define("portc", CONSTANT, (int)PORTC); */
-  /* define("portd", CONSTANT, (int)PORTD); */
+  define_constant("portb", (int)&PORTB);
+  define_constant("portc", (int)&PORTC);
+  define_constant("portd", (int)&PORTD);
 
   define("keys", VARIABLE, &keyboard_keys);
   define("modifiers", VARIABLE, &keyboard_modifier_keys);
@@ -106,12 +119,16 @@ int main (void) {
   define("delay", PRIMITIVE, &delay);
   define("delayten", PRIMITIVE, &delayten);
 
+  define("sendint", PRIMITIVE, &send_int);
+  define("send", PRIMITIVE, &send);
+
   delaysec();
 
-  char * code = ": b do blinks loop ; 4 0 b reset ";
+  char * code = "22 8 23 22 8 21 18 : write do send loop ; 7 0 write 44 send";
   run(code);
 
   delaysec();
   blinq(); blinq(); blinq();
   reset();
 };
+

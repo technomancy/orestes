@@ -6,29 +6,6 @@
 #define MAX_STACK 256 // in bytes
 #define MAX_WORD_SIZE 128 // in bytes
 
-struct dictionary;
-union cell;
-typedef union cell_t cell;
-
-union cell_t {
-  unsigned int i;
-  cell * c;
-  char * s;
-  char ch;
-  struct dictionary * d;
-  void * v;
-  int this_is_here_to_spoon_feed_the_compiler_yay;
-};
-
-struct dictionary {
-  struct dictionary * prev;
-  enum entry_type type;
-  char * name;
-  cell body;
-};
-
-typedef struct dictionary dict;
-
 cell stack_start = { .i = 0 };
 cell stack = { .i = 0 };
 
@@ -59,7 +36,7 @@ void elsee(void);
 
 #ifdef F_CPU
 void out(char * s);
-#define db out
+void db(char * s) {}; // #define db out
 #else
 #define out printf
 void db(char * s) {};
@@ -80,6 +57,21 @@ void define(char * name, enum entry_type type, void * body) {
     cp->name = name;
     cp->body.c = (cell*)body;
     cp->type = type;
+  } else {
+    out("oom");
+  }
+};
+
+void define_constant(char * name, int value) {
+  dict * cp_prev = cp;
+
+  cp = (dict*)malloc(sizeof(dict));
+
+  if(cp != NULL) {
+    cp->prev = cp_prev;
+    cp->name = name;
+    cp->body.i = value;
+    cp->type = CONSTANT;
   } else {
     out("oom");
   }
@@ -302,8 +294,7 @@ void doo(void) {
 };
 
 void loop(void) {
-  if(loop_counters[loop_depth] != loop_limits[loop_depth]) {
-    loop_counters[loop_depth]++;
+  if(++loop_counters[loop_depth] != loop_limits[loop_depth]) {
     ip = loop_starts[loop_depth];
   } else {
     if(--loop_depth < 0) {
