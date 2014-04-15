@@ -71,16 +71,15 @@ void out(char * s) {
   usb_keyboard_press(KEY_SPACE, 0);
 };
 
-void send_int(void) {
+void sendint(void) {
   char * s = malloc(8);
   itoa(drop().i, s, 10);
+
   for(int i = 0; s[i]; i++) {
-    usb_keyboard_press(s[i] - 19, 0);
+    usb_keyboard_press(s[i] == 48 ? KEY_0 : s[i] - 19, 0);
   }
 
-  usb_keyboard_press(KEY_SPACE, 0);
-  usb_keyboard_press(KEY_SLASH, 0);
-  usb_keyboard_press(KEY_SPACE, 0);
+  out("");
 };
 
 void send(void) {
@@ -106,6 +105,14 @@ int main (void) {
   define_constant("portc", (int)&PORTC);
   define_constant("portd", (int)&PORTD);
 
+  define_constant("ddrb", (int)&DDRB);
+  define_constant("ddrc", (int)&DDRC);
+  define_constant("ddrd", (int)&DDRD);
+
+  define_constant("pinb", (int)&PINB);
+  define_constant("pinc", (int)&PINC);
+  define_constant("pind", (int)&PIND);
+
   define("keys", VARIABLE, &keyboard_keys);
   define("modifiers", VARIABLE, &keyboard_modifier_keys);
   define("send", PRIMITIVE, &send);
@@ -119,16 +126,13 @@ int main (void) {
   define("delay", PRIMITIVE, &delay);
   define("delayten", PRIMITIVE, &delayten);
 
-  define("sendint", PRIMITIVE, &send_int);
+  define("sendint", PRIMITIVE, &sendint);
   define("send", PRIMITIVE, &send);
 
-  delaysec();
-
-  char * code = "22 8 23 22 8 21 18 : write do send loop ; 7 0 write 44 send";
-  run(code);
+  run("0 ddrb !c 255 portb !c");
+  run(": m begin delaysec pinb @c dup sendint 254 - if again then ; m");
 
   delaysec();
   blinq(); blinq(); blinq();
   reset();
 };
-
