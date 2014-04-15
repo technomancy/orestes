@@ -235,18 +235,18 @@ void word(void) {
 
   // skip till space or newline or null
   while(input[i] != 32 && input[i] != 10 && input[i]) { i++; };
-  i++;
+  char * b = malloc(3);
 
-  if(new_str = malloc(i)) {
-    for(char j = 0; j < i - 1; j++) {
+  if(new_str = malloc(i + 1)) {
+    for(char j = 0; j < i; j++) {
       new_str[j] = input[j];
     }
     new_str[i] = 0; // slap a null terminator on
 
     push((cell)new_str);
-    input += i;
+    input += i + 1;
   } else {
-    error("oom\n");
+    out("oom");
   }
 };
 
@@ -379,12 +379,16 @@ void colon(void) {
 };
 
 void semicolon(void) {
-  compiling->prev = cp;
-  dp.d++;
-  cp = compiling;
-  // TODO: this causes all kinds of segfaults
-  // realloc(cp->body, (db - (int)cp->body));
-  compiling = NULL;
+  if(compiling) {
+    compiling->prev = cp;
+    dp.d++;
+    cp = compiling;
+    // TODO: this causes all kinds of segfaults
+    // realloc(cp->body, (db - (int)cp->body));
+    compiling = NULL;
+  } else {
+    out("not compiling");
+  }
 };
 
 void add_to_definition(void) {
