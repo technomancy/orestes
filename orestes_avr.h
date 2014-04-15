@@ -1,3 +1,3 @@
 void init();
 void blink();
-void type(char * s);
+void out(char * s);

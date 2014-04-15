@@ -1,6 +1,5 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include <avr/interrupt.h>
 
 #include "usb_keyboard.h"
 #include "orestes.h"
@@ -53,16 +52,22 @@ void blinks(void) {
   delaysec();
 };
 
-void type(char * s) {
-  while(*s) {
-    usb_keyboard_press((*s - 97) + 4, 0);
-    delayten();
+void out(char * s) {
+  while(*s) { // gotta be a better way for this
+    if(*s < 123 && *s > 96) {
+      usb_keyboard_press((*s - 97) + 4, 0);
+    } else if(*s == 32) {
+      usb_keyboard_press(KEY_SPACE, 0);
+    } else if(*s == 58) {
+      usb_keyboard_press(KEY_SEMICOLON, KEY_SHIFT);
+    } else if(*s > 48 && *s < 58) {
+      usb_keyboard_press((*s - 19), 0);
+    }
     s++;
   };
-};
-
-void typestuff(void) {
-  type("maam");
+  usb_keyboard_press(KEY_SPACE, 0);
+  usb_keyboard_press(KEY_SLASH, 0);
+  usb_keyboard_press(KEY_SPACE, 0);
 };
 
 void send(void) {
@@ -91,9 +96,11 @@ int main (void) {
   define("keys", VARIABLE, &keyboard_keys);
   define("modifiers", VARIABLE, &keyboard_modifier_keys);
   define("send", PRIMITIVE, &send);
+
   define("reset", PRIMITIVE, &reset);
   define("blink", PRIMITIVE, &blink);
-  define("typestuff", PRIMITIVE, &typestuff);
+  define("blinks", PRIMITIVE, &blinks);
+  define("blinq", PRIMITIVE, &blinq);
 
   define("delaysec", PRIMITIVE, &delaysec);
   define("delay", PRIMITIVE, &delay);
@@ -101,21 +108,8 @@ int main (void) {
 
   delaysec();
 
-  // if we comment this out, the forth code never runs.
-  // http://p.hagelb.org/mystery.gif
-  char * s = "a"; while(*s) {s++;};
-
-  // works:
-  run("blink blink blink ");
-
-  // blink blink works, no typestuff
-  // run("blink blink typestuff ");
-
-  // typestuff works, no blink blink blink
-  // run("blink blink blink typestuff ");
-
-  // and then sometimes randomly no forth runs at all
-  // ... without any changes to the source
+  char * code = ": b do blinks loop ; 4 0 b reset ";
+  run(code);
 
   delaysec();
   blinq(); blinq(); blinq();

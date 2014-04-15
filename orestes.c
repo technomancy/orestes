@@ -6,10 +6,6 @@
 #define MAX_STACK 256 // in bytes
 #define MAX_WORD_SIZE 128 // in bytes
 
-#define error printf
-#define db printf
-#define out printf
-
 struct dictionary;
 union cell;
 typedef union cell_t cell;
@@ -61,6 +57,14 @@ void execute(void);
 void then(void);
 void elsee(void);
 
+#ifdef F_CPU
+void out(char * s);
+#define db out
+#else
+#define out printf
+void db(char * s) {};
+#endif
+
 void push(cell c) {
   *stack.c = (cell)(c.i);
   stack.c++;
@@ -77,7 +81,7 @@ void define(char * name, enum entry_type type, void * body) {
     cp->body.c = (cell*)body;
     cp->type = type;
   } else {
-    error("oom\n");
+    out("oom");
   }
 };
 
@@ -127,7 +131,7 @@ void run_body(dict * entry) {
 cell drop(void) {
   stack.c--;
   if(stack.i < stack_start.i) {
-    error("Stack underflow\n");
+    out("stack underflow");
     stack = stack_start;
   }
   return *stack.c;
@@ -155,11 +159,11 @@ void over(void) {
 };
 
 void dot_s(void) {
-  out("<%ld> ", stack.c - stack_start.c);
+  printf("<%ld> ", stack.c - stack_start.c);
   for(cell i = stack_start; i.i < stack.i; i.c++) {
-    out("%u ", i.c->i);
+    printf("%u ", i.c->i);
   }
-  out("\n");
+  printf("\n");
 };
 
 void fetch(void) {
@@ -268,7 +272,7 @@ void string_eq(void) {
 
 void iff(void) {
   if(conditional_depth++ > 15) {
-    error("if too nested\n");
+    out("if too nested");
   } else {
     if(drop().i) { // there's surely a cleverer way to do this
       conditionals |= (1 << conditional_depth);
@@ -289,7 +293,7 @@ void then(void) {
 
 void doo(void) {
   if(loop_depth++ > 15) {
-    error("do too nested\n");
+    out("do too nested");
   } else {
     loop_counters[loop_depth] = drop().i;
     loop_limits[loop_depth] = drop().i;
@@ -303,7 +307,7 @@ void loop(void) {
     ip = loop_starts[loop_depth];
   } else {
     if(--loop_depth < 0) {
-      error("do/loop mismatch\n");
+      out("do/loop mismatch");
     }
   }
 };
@@ -321,7 +325,7 @@ void k(void) {
 
 void begin (void) {
   if(loop_depth++ > 15) {
-    error("do too nested\n");
+    out("do too nested");
   } else {
     loop_starts[loop_depth] = ip;
   }
@@ -340,6 +344,7 @@ void find(void) {
   for(dict * cur = cp; cur; cur = cur->prev) {
     push((cell)target);
     push((cell)cur->name);
+
     string_eq();
     if(drop().i) {
       push((cell)cur);
@@ -395,7 +400,7 @@ void add_to_definition(void) {
   *(dp.c) = (cell)drop();
   dp.c++;
   if(dp.i > compiling->body.i + MAX_WORD_SIZE) {
-    error("definition too big\n");
+    out("definition too big");
   }
 };
 
@@ -403,13 +408,16 @@ void execute(void) {
   dict * entry = drop().d;
 
   if(compiling && entry->type != IMMEDIATE) {
+    db("add");
     push((cell)entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
+    db("prim");
     // db(" p> %s\n", entry->name);
     void (*primitive)(void) = entry->body.v;
     (*primitive)();
   } else if(entry->type == COLON) {
+    db("colon");
     // db(" :> %s %d\n", entry->name, compiling);
     run_body(entry);
   } else if(entry->type == CONSTANT) {
@@ -417,7 +425,7 @@ void execute(void) {
   } else if(entry->type == VARIABLE) {
     push((cell)&entry->body);
   } else {
-    error("Unknown type %d\n", entry->type);
+    out("unknown type");
   }
 };
 
@@ -430,6 +438,7 @@ void interpret(void) {
   dict * entry = drop().d;
 
   if(entry) {
+    db("entry");
     free(drop().s);
     push((cell)entry);
     execute();
@@ -437,7 +446,7 @@ void interpret(void) {
     if(compiling) {
       to_number();
       if(!drop().i) {
-        error("unknown thingy\n");
+        out("compiling unknown thingy");
       } else {
         push((cell)"literal");
         find();
@@ -447,7 +456,9 @@ void interpret(void) {
     } else {
       to_number();
       if(!drop().i) {
-        error("unknown thingy\n");
+        out("unknown thingy");
+      } else {
+        db("num");
       }
     }
   }

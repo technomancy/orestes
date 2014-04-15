@@ -47,10 +47,11 @@ Install =gcc-avr= and run =make test=.
    - ☑ run on the board
    - ☑ LED blink
    - ☑ send hard-coded USB key codes
-   - ☐ send hard-coded USB key codes from forth
+   - ☐ send hard-coded USB key codes from forth #4
    - ☐ send key codes by column
-   - ☐ read forth source from separate file instead of inline strings
+   - ☐ read forth source from separate file instead of inline strings #3
    - ☐ comments
-   - ☐ full matrix
-   - ☐ debounced matrix
-   - ☐ layered matrix
+   - ☐ full matrix #6
+   - ☐ debounced matrix #7
+   - ☐ layered matrix #8
+   - ☐ interactive mode #9
