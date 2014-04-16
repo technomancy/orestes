@@ -129,8 +129,11 @@ int main (void) {
   define("sendint", PRIMITIVE, &sendint);
   define("send", PRIMITIVE, &send);
 
-  run("0 ddrb !c 255 portb !c");
-  run(": m begin delaysec pinb @c dup sendint 254 - if again then ; m");
+  // TODO: move to forth
+  int layout[8] = {4, 22, 7, 9, 10, 11, 13, 14};
+  define_constant("layout", (int)&layout);
+
+#include "inlined.c"
 
   delaysec();
   blinq(); blinq(); blinq();

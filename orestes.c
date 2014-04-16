@@ -202,6 +202,14 @@ void equals(void) {
   push((cell)(drop().i == drop().i));
 };
 
+void right_shift(void) {
+  push((cell)(drop().i >> 1));
+};
+
+void left_shift(void) {
+  push((cell)(drop().i << 1));
+};
+
 
 // parsing primitives
 
@@ -481,6 +489,8 @@ void primitives (void) {
   define("and", PRIMITIVE, &andd);
   define("not", PRIMITIVE, &nott);
   define("=", PRIMITIVE, &equals);
+  define(">>", PRIMITIVE, &right_shift);
+  define("<<", PRIMITIVE, &left_shift);
 
   define(">number", PRIMITIVE, &to_number);
   define("word", PRIMITIVE, &word);

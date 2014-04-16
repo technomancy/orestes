@@ -49,7 +49,7 @@ Install =gcc-avr= and run =make test=.
    - ☑ send hard-coded USB key codes
    - ☑ send hard-coded USB key codes from forth #4
    - ☑ send key codes by column
-   - ☐ read forth source from separate file instead of inline strings #3
+   - ☑ read forth source from separate file instead of inline strings #3
    - ☐ comments
    - ☐ full matrix #6
    - ☐ debounced matrix #7
