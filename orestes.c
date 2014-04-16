@@ -237,6 +237,9 @@ void word(void) {
   char i = 0;
   char * new_str = 0;
 
+  // if we're on space, advance
+  while(*input == 32 || *input == 10) { input++; };
+
   // skip till space or newline or null
   while(input[i] != 32 && input[i] != 10 && input[i]) { i++; };
   char * b = malloc(3);
@@ -467,6 +470,11 @@ void exitt(void) {
   exit(0);
 };
 
+void comment(void) {
+  while(*input != 41) { input++; }
+  input++;
+};
+
 
 
 void primitives (void) {
@@ -519,6 +527,8 @@ void primitives (void) {
   define("execute", PRIMITIVE, &execute);
   define("interpret", PRIMITIVE, &interpret);
   define("exit", PRIMITIVE, &exitt);
+
+  define("(", PRIMITIVE, &comment); cp->type = IMMEDIATE;
 };
 
 #ifndef F_CPU
