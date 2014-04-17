@@ -61,6 +61,8 @@ void out(char * s) {
       usb_keyboard_press(KEY_SPACE, 0);
     } else if(*s == 58) {
       usb_keyboard_press(KEY_SEMICOLON, KEY_SHIFT);
+    } else if(*s == 48) {
+      usb_keyboard_press(KEY_0, 0);
     } else if(*s > 48 && *s < 58) {
       usb_keyboard_press((*s - 19), 0);
     }
@@ -69,17 +71,6 @@ void out(char * s) {
   usb_keyboard_press(KEY_SPACE, 0);
   usb_keyboard_press(KEY_SLASH, 0);
   usb_keyboard_press(KEY_SPACE, 0);
-};
-
-void sendint(void) {
-  char * s = malloc(8);
-  itoa(drop().i, s, 10);
-
-  for(int i = 0; s[i]; i++) {
-    usb_keyboard_press(s[i] == 48 ? KEY_0 : s[i] - 19, 0);
-  }
-
-  out("");
 };
 
 void send(void) {
@@ -126,7 +117,6 @@ int main (void) {
   define("delay", PRIMITIVE, &delay);
   define("delayten", PRIMITIVE, &delayten);
 
-  define("sendint", PRIMITIVE, &sendint);
   define("send", PRIMITIVE, &send);
 
   // TODO: move to forth

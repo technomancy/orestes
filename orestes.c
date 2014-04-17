@@ -49,14 +49,14 @@ void db(char * s) {
 };
 
 void push(cell c) {
-  *stack.c = (cell)(c.i);
+  *stack.c = c;
   stack.c++;
 };
 
 void define(char * name, enum entry_type type, void * body) {
   dict * cp_prev = cp;
 
-  cp = (dict*)malloc(sizeof(dict));
+  cp = malloc(sizeof(dict));
 
   if(cp != NULL) {
     cp->prev = cp_prev;
@@ -64,6 +64,7 @@ void define(char * name, enum entry_type type, void * body) {
     cp->body.c = (cell*)body;
     cp->type = type;
   } else {
+    cp = cp_prev;
     out("oom");
   }
 };
@@ -71,7 +72,7 @@ void define(char * name, enum entry_type type, void * body) {
 void define_constant(char * name, int value) {
   dict * cp_prev = cp;
 
-  cp = (dict*)malloc(sizeof(dict));
+  cp = malloc(sizeof(dict));
 
   if(cp != NULL) {
     cp->prev = cp_prev;
@@ -79,6 +80,7 @@ void define_constant(char * name, int value) {
     cp->body.i = value;
     cp->type = CONSTANT;
   } else {
+    cp = cp_prev;
     out("oom");
   }
 };
@@ -216,6 +218,12 @@ void left_shift(void) {
   push((cell)(drop().i << 1));
 };
 
+void numout(void) {
+  char * s = malloc(8);
+  sprintf(s, "%u ", drop().i);
+  out(s);
+};
+
 
 // parsing primitives
 
@@ -223,20 +231,24 @@ void to_number(void) {
   char * in = drop().s;
   cell n = {.i = 0};
 
-  for(char i = 0; in[i]; i++) {
-    if(in[i] >= 48 && in[i] < 58) {
-      n.i *= 10;
-      n.i += (in[i] - 48);
-    } else {
-      free(in);
-      push((cell)0);
-      return;
+  if(*in) {
+    for(char i = 0; in[i]; i++) {
+      if(in[i] >= 48 && in[i] < 58) {
+        n.i *= 10;
+        n.i += (in[i] - 48);
+      } else {
+        free(in);
+        push((cell)0);
+        return;
+      }
     }
-  }
 
-  free(in);
-  push(n);
-  push((cell)1);
+    free(in);
+    push(n);
+    push((cell)1);
+  } else {
+    push((cell)0);
+  }
 };
 
 void word(void) {
@@ -248,16 +260,15 @@ void word(void) {
 
   // skip till space or newline or null
   while(input[i] != 32 && input[i] != 10 && input[i]) { i++; };
-  char * b = malloc(3);
 
   if(new_str = malloc(i + 1)) {
     for(char j = 0; j < i; j++) {
       new_str[j] = input[j];
     }
     new_str[i] = 0; // slap a null terminator on
-
     push((cell)new_str);
-    input += i + 1;
+    db("parsed: "); db(new_str); db("\n");
+    input += i;
   } else {
     out("oom");
   }
@@ -356,6 +367,7 @@ void find(void) {
     string_eq();
     if(drop().i) {
       push((cell)cur);
+      db("found: "); db(target); db("\n");
       return;
     }
   }
@@ -377,7 +389,7 @@ void constant(void) {
 void variable(void) {
   word();
   char * name = drop().s;
-  define(name, VARIABLE, (cell*)-1);
+  define(name, VARIABLE, 0);
 };
 
 void colon(void) {
@@ -416,7 +428,7 @@ void execute(void) {
   dict * entry = drop().d;
 
   if(compiling && entry->type != IMMEDIATE) {
-    db("add ");
+    db("add \n");
     push((cell)entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
@@ -431,7 +443,7 @@ void execute(void) {
   } else if(entry->type == VARIABLE) {
     push((cell)&entry->body);
   } else {
-    out("unknown type");
+    out(" unknown type\n");
   }
 };
 
@@ -452,7 +464,7 @@ void interpret(void) {
     if(compiling) {
       to_number();
       if(!drop().i) {
-        out("compiling unknown thingy");
+        out(" compiling unknown thingy\n");
       } else {
         push((cell)"literal");
         find();
@@ -462,7 +474,7 @@ void interpret(void) {
     } else {
       to_number();
       if(!drop().i) {
-        out("unknown thingy");
+        out("unknown thingy\n");
       } else {
         db("num\n");
       }
@@ -473,6 +485,8 @@ void interpret(void) {
 void exitt(void) {
   exit(0);
 };
+
+void noop (void) {};
 
 void comment(void) {
   while(*input != 41) { input++; }
@@ -503,6 +517,7 @@ void primitives (void) {
   define("=", PRIMITIVE, &equals);
   define(">>", PRIMITIVE, &right_shift);
   define("<<", PRIMITIVE, &left_shift);
+  define("numout", PRIMITIVE, &numout);
 
   define(">number", PRIMITIVE, &to_number);
   define("word", PRIMITIVE, &word);
@@ -517,7 +532,6 @@ void primitives (void) {
   define("i", PRIMITIVE, &i);
   define("j", PRIMITIVE, &j);
   define("k", PRIMITIVE, &k);
-
   define("begin", PRIMITIVE, &begin);
   define("again", PRIMITIVE, &again);
 
@@ -533,16 +547,19 @@ void primitives (void) {
   define("interpret", PRIMITIVE, &interpret);
   define("exit", PRIMITIVE, &exitt);
 
+  define("noop", PRIMITIVE, &noop);
   define("(", PRIMITIVE, &comment); cp->type = IMMEDIATE;
   define_constant("debug", (int)&debug);
+
 };
 
 #ifndef F_CPU
 int main(void) {
+  char * init_input = malloc(80);
   primitives();
-  input = malloc(80);
 
-  while(gets(input)) {
+  while(gets(init_input)) {
+    input = init_input;
     while(*input) {
       interpret();
     }
