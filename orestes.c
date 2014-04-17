@@ -392,6 +392,24 @@ void variable(void) {
   define(name, VARIABLE, 0);
 };
 
+void allot(void) {
+  int size = drop().i;
+  cell array = {.c = malloc(size * sizeof(cell))};
+
+  for(int i = 0; i < size; i++) {
+    *(array.c + i) = drop();
+  }
+  word();
+  char * name = drop().s;
+  define_constant(name, array.i);
+};
+
+void cells(void) {
+  unsigned int n = drop().i;
+  cell c = {.i = (n * sizeof(cell))};
+  push(c);
+};
+
 void colon(void) {
   word();
 
@@ -539,6 +557,9 @@ void primitives (void) {
   define("literal", PRIMITIVE, &literal);
   define("constant", PRIMITIVE, &constant);
   define("variable", PRIMITIVE, &variable);
+  define("allot", PRIMITIVE, &allot);
+  define("cells", PRIMITIVE, &cells);
+
   define(":", PRIMITIVE, &colon);
   define(";", PRIMITIVE, &semicolon); cp->type = IMMEDIATE;
   define(",", PRIMITIVE, &add_to_definition);
