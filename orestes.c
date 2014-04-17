@@ -17,6 +17,8 @@ cell dp = { .i = 0 }; // definition pointer (while adding to word definitions)
 
 char * input = NULL;
 
+char debug = 0;
+
 unsigned short conditionals = 0xffff;
 char conditional_depth = 0;
 
@@ -36,11 +38,15 @@ void elsee(void);
 
 #ifdef F_CPU
 void out(char * s);
-void db(char * s) {}; // #define db out
 #else
 #define out printf
-void db(char * s) {};
 #endif
+
+void db(char * s) {
+  if(debug) {
+    out(s);
+  };
+};
 
 void push(cell c) {
   *stack.c = (cell)(c.i);
@@ -410,17 +416,15 @@ void execute(void) {
   dict * entry = drop().d;
 
   if(compiling && entry->type != IMMEDIATE) {
-    db("add");
+    db("add ");
     push((cell)entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
-    db("prim");
-    // db(" p> %s\n", entry->name);
+    db("prim "); db(entry->name); db("\n");
     void (*primitive)(void) = entry->body.v;
     (*primitive)();
   } else if(entry->type == COLON) {
-    db("colon");
-    // db(" :> %s %d\n", entry->name, compiling);
+    db("colon "); db(entry->name); db("\n");
     run_body(entry);
   } else if(entry->type == CONSTANT) {
     push(entry->body);
@@ -440,7 +444,7 @@ void interpret(void) {
   dict * entry = drop().d;
 
   if(entry) {
-    db("entry");
+    db("entry ");
     free(drop().s);
     push((cell)entry);
     execute();
@@ -460,7 +464,7 @@ void interpret(void) {
       if(!drop().i) {
         out("unknown thingy");
       } else {
-        db("num");
+        db("num\n");
       }
     }
   }
@@ -524,11 +528,13 @@ void primitives (void) {
   define(":", PRIMITIVE, &colon);
   define(";", PRIMITIVE, &semicolon); cp->type = IMMEDIATE;
   define(",", PRIMITIVE, &add_to_definition);
+
   define("execute", PRIMITIVE, &execute);
   define("interpret", PRIMITIVE, &interpret);
   define("exit", PRIMITIVE, &exitt);
 
   define("(", PRIMITIVE, &comment); cp->type = IMMEDIATE;
+  define_constant("debug", (int)&debug);
 };
 
 #ifndef F_CPU

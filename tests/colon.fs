@@ -1,1 +1,1 @@
-6 : inc 1 + ; ( comment ) dup inc + .s
+6 ( comment out ) : inc ( comment compiling ) 1 + ; dup inc + .s
