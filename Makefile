@@ -20,14 +20,17 @@ local:
 	gcc -std=gnu99 -c $(TARGET).c -o $(TARGET).o
 	gcc $(TARGET).o -o $(TARGET)
 
-simulate: build
-	simulavr -d $(MCU) $(TARGET).hex
+simulate: local
+	cat $(TARGET).fs | ./$(TARGET)
 
 upload: build
 	teensy_loader_cli -w -mmcu=$(MCU) $(TARGET).hex
 
 test: local
 	tests/run ./$(TARGET)
+
+repl: local
+	./$(TARGET)
 
 clean:
 	rm -f $(TARGET).o $(TARGET).hex $(TARGET)

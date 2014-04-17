@@ -1,9 +1,27 @@
 * Orestes
 
-I need to implement a Forth so I can write firmware for my keyboard so
+I need to implement a Forth so I can write firmware for [[https://github.com/technomancy/atreus][my keyboard]] so
 I can write actual code.
 
-Install =gcc-avr= and run =make test=.
+Install =gcc-avr= and run =make upload=.
+
+** Caveats
+
+This Forth dialect is a bit weird for two reasons: 0) it's designed to
+run on a chip that has 32kb of flash for storage of C programs but
+only 2.5kb of RAM for Forth programs and data combined. Because of
+this, it is less self-hosting than is traditional. There are other
+Forths for AVR that store Forth code in flash, but as far as I can
+tell they all require wiping the bootloader, which I don't want to
+do. 1) It's also implemented by someone who has barely used Forth and
+doesn't really know C.
+
+We use malloc rather than managing our own heap. This gives us a bit
+more flexibility, but it also means things like =allot= can't just
+assume a contiguous section of dictionary space, so it works more like
+a varying-width =variable= than traditional =allot=. There are
+probably other weird idiosyncrasies, but I'm not familiar enough with
+Forth to spot them.
 
 ** matrix
    - layer x row x column
