@@ -114,8 +114,9 @@ char maybe_unskip() {
 };
 
 void run_body(dict * entry) {
+  cell orig_ip = ip;
+  db("run "); db(entry->name); db("\n");
   for(ip.c = entry->body.c; ip.c->i; ip.c++) {
-    // db("running ip %d, %d\n", ip.i, ip.c->c);
     push((cell)ip.c->c);
     if((1 << conditional_depth) & conditionals) {
       execute();
@@ -123,6 +124,8 @@ void run_body(dict * entry) {
       maybe_unskip();
     }
   }
+  ip = orig_ip;
+  db("run done "); db(entry->name); db("\n");
 };
 
 
