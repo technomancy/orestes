@@ -273,7 +273,7 @@ void word(void) {
     db("parsed: "); db(new_str); db("\n");
     input += i;
   } else {
-    out("oom");
+    out("oomw");
   }
 };
 
@@ -449,7 +449,7 @@ void execute(void) {
   dict * entry = drop().d;
 
   if(compiling && entry->type != IMMEDIATE) {
-    db("add \n");
+    db("add "); db(entry->name); db("\n");
     push((cell)entry);
     add_to_definition();
   } else if(entry->type == PRIMITIVE || entry->type == IMMEDIATE) {
@@ -460,10 +460,13 @@ void execute(void) {
     db("colon "); db(entry->name); db("\n");
     run_body(entry);
   } else if(entry->type == CONSTANT) {
+    db("const "); db(entry->name); db("\n");
     push(entry->body);
   } else if(entry->type == VARIABLE) {
+    db("var "); db(entry->name); db("\n");
     push((cell)&entry->body);
   } else {
+    out(entry->name);
     out(" unknown type\n");
   }
 };
@@ -578,9 +581,33 @@ void primitives (void) {
 };
 
 #ifndef F_CPU
+unsigned int keyboard_modifier_keys;
+cell * keyboard_keys[6] = {0, 0, 0, 0, 0, 0};
+
+void usbsend(void) {
+  out("pressed: ");
+  for(int i = 0; i < 6; i++) {
+    printf("%d ", keyboard_keys[i]);
+  }; out("\n");
+};
+
 int main(void) {
   char * init_input = malloc(80);
   primitives();
+
+  // board simulator
+  define_constant("pressedkeys", keyboard_keys);
+  define_constant("pressedmodifiers", &keyboard_modifier_keys);
+  define_constant("onboard", 0);
+  define("portb", VARIABLE, 0);
+  define("portc", VARIABLE, 0);
+  define("portd", VARIABLE, 0);
+  define("ddrb", VARIABLE, 0);
+  define("ddrc", VARIABLE, 0);
+  define("ddrd", VARIABLE, 0);
+  define("pinc", VARIABLE, 253);
+  define("pind", VARIABLE, 251);
+  define("usbsend", PRIMITIVE, &usbsend);
 
   while(gets(init_input)) {
     input = init_input;
