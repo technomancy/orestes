@@ -59,7 +59,7 @@ Forth to spot them.
    - ☑ read forth source from separate file instead of inline strings #3
    - ☑ comments
    - ☑ move forth source to flash
-   - ☐ full matrix #6
+   - ☑ full matrix #6
    - ☐ modifiers #10
    - ☐ debounced matrix #7
    - ☐ layered matrix #8

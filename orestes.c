@@ -4,7 +4,7 @@
 #include "orestes.h"
 
 #define MAX_STACK 256 // in bytes
-#define MAX_WORD_SIZE 128 // in bytes
+#define MAX_WORD_SIZE 256 // in bytes
 
 cell stack_start = { .i = 0 };
 cell stack = { .i = 0 };
@@ -213,12 +213,22 @@ void equals(void) {
   push((cell)(drop().i == drop().i));
 };
 
+void greaterthan(void) {
+  push((cell)(drop().i < drop().i));
+};
+
+void lessthan(void) {
+  push((cell)(drop().i > drop().i));
+};
+
 void right_shift(void) {
-  push((cell)(drop().i >> 1));
+  unsigned int places = drop().i;
+  push((cell)(drop().i >> places));
 };
 
 void left_shift(void) {
-  push((cell)(drop().i << 1));
+  unsigned int places = drop().i;
+  push((cell)(drop().i << places));
 };
 
 void numout(void) {
@@ -539,6 +549,8 @@ void primitives (void) {
   define("and", PRIMITIVE, &andd);
   define("not", PRIMITIVE, &nott);
   define("=", PRIMITIVE, &equals);
+  define(">", PRIMITIVE, &greaterthan);
+  define("<", PRIMITIVE, &lessthan);
   define(">>", PRIMITIVE, &right_shift);
   define("<<", PRIMITIVE, &left_shift);
   define("numout", PRIMITIVE, &numout);

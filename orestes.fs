@@ -1,26 +1,58 @@
-( 0 ddrc !c 255 portc !c )
-( 0 ddrd !c 255 portd !c )
-1 debug !
+255 ddrb !c
+0 ddrc !c 255 portc !c
+0 ddrd !c 255 portd !c
 
-: inc dup @ 1 + swap ! ;
+4 constant rows
+11 constant columns
 
-4 22 7 8 10 11 13 14 ( row 1 )
-
-8 allot row1 
+19 18 12 24 28 0 23 21 8  26 20 columns allot row0
+51 15 14 13 11 0 10 9  7  22 4  columns allot row1
+29 27 6  25 5  0 17 16 54 55 56 columns allot row2
+41 43 0  0  42 0 44 0  52 47 40 columns allot row3 ( modifiers, oh dear )
 
 variable rowoffset 0 rowoffset !
+variable currentrow row0 currentrow !
 
-: scanbit 1 and if
-        row1 rowoffset cells + @ numout then ;
+row3 row2 row1 row0 rows allot layer1
 
-: scanbyte
-    numout
-    8 0 do dup scanbit
-        >> rowoffset inc loop ;
+variable currentlayer layer1 currentlayer !
 
-1 scanbit exit
+variable pressedcount 0 pressedcount !
 
-: m begin
-        0 row-offset !
-        pind @c not scanbyte
-    again ;
+: press ( keycode -- ! )
+    pressedcount 6 > if
+        dup if
+            pressedkeys pressedcount @ cells + !
+            pressedcount @ 1 + pressedcount !
+        then then ;
+
+: scanbit 1 and if ( shifted-byte -- ! )
+        currentrow @ i cells + @ press then ;
+
+: scanbyte ( portbyte -- ! )
+    0 do dup scanbit 1 >> loop ;
+
+: scanrow ( -- )
+    pinc @c not 8 scanbyte drop
+    pind @c not 8 columns - scanbyte drop ;
+
+: clearpressed ( -- )
+    6 0 do 0 pressedkeys i cells + ! loop
+    0 pressedcount ! ;
+
+: setrow ( rownum -- )
+    dup
+    1 swap << not portb !c ( set output pin low for this row )
+    cells currentlayer @ + @ currentrow ! ;
+
+: scan ( -- )
+    rows 0 do
+        i setrow scanrow
+        onboard not if 255 pinc !c ( -- just for testing ) then
+    loop
+    usbsend
+    clearpressed ;
+
+: main begin scan again ;
+
+scan
