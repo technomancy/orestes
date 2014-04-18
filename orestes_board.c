@@ -1,6 +1,7 @@
-#include <avr/io.h>
-#include <util/delay.h>
 #include <stdlib.h>
+#include <avr/io.h>
+#include <avr/pgmspace.h>
+#include <util/delay.h>
 
 #include "usb_keyboard.h"
 #include "orestes.h"
@@ -73,7 +74,7 @@ void out(char * s) {
   usb_keyboard_press(KEY_SPACE, 0);
 };
 
-void send(void) {
+void usbsend(void) {
   usb_keyboard_press(drop().i, keyboard_modifier_keys);
 };
 
@@ -84,13 +85,14 @@ void run(char * s) {
   }
 };
 
+#include "inlined_declare.c"
+
 int main (void) {
   primitives();
 
   CPU_PRESCALE(0);
   usb_init();
   while (!usb_configured()) /* wait */ ;
-  (DDRD |= (1<<6));
 
   define_constant("portb", (int)&PORTB);
   define_constant("portc", (int)&PORTC);
@@ -104,9 +106,8 @@ int main (void) {
   define_constant("pinc", (int)&PINC);
   define_constant("pind", (int)&PIND);
 
-  define("keys", VARIABLE, &keyboard_keys);
-  define("modifiers", VARIABLE, &keyboard_modifier_keys);
-  define("send", PRIMITIVE, &send);
+  define("pressedkeys", VARIABLE, &keyboard_keys);
+  define("pressedmodifiers", VARIABLE, &keyboard_modifier_keys);
 
   define("reset", PRIMITIVE, &reset);
   define("blink", PRIMITIVE, &blink);
@@ -117,15 +118,15 @@ int main (void) {
   define("delay", PRIMITIVE, &delay);
   define("delayten", PRIMITIVE, &delayten);
 
-  define("send", PRIMITIVE, &send);
+  define("usbsend", PRIMITIVE, &usbsend);
 
-  // TODO: move to forth
-  int layout[8] = {4, 22, 7, 9, 10, 11, 13, 14};
-  define_constant("layout", (int)&layout);
+  define_constant("onboard", 1);
 
-#include "inlined.c"
+  #include "inlined_run.c"
 
   delaysec();
+
+  (DDRD |= (1<<6));
   blinq(); blinq(); blinq();
   reset();
 };

@@ -1,4 +1,5 @@
 /orestes
 /orestes.hex
 /*.o
-/inlined.c
+/inlined_declare.c
+/inlined_run.c
