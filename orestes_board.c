@@ -95,18 +95,18 @@ int main (void) {
   while (!usb_configured()) /* wait */ ;
 
   define_constant("portb", (int)&PORTB);
-  define_constant("portc", (int)&PORTC);
   define_constant("portd", (int)&PORTD);
+  define_constant("portf", (int)&PORTF);
 
   define_constant("ddrb", (int)&DDRB);
-  define_constant("ddrc", (int)&DDRC);
   define_constant("ddrd", (int)&DDRD);
+  define_constant("ddrf", (int)&DDRF);
 
   define_constant("pinb", (int)&PINB);
-  define_constant("pinc", (int)&PINC);
   define_constant("pind", (int)&PIND);
+  define_constant("pinf", (int)&PINF);
 
-  define("pressedkeys", VARIABLE, &keyboard_keys);
+  define("pressedkeys", VARIABLE, keyboard_keys);
   define("pressedmodifiers", VARIABLE, &keyboard_modifier_keys);
 
   define("reset", PRIMITIVE, &reset);

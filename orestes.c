@@ -202,7 +202,9 @@ void plus(void) {
 };
 
 void minus(void) {
-  push((cell)(drop().i - drop().i));
+  unsigned int x = drop().i;
+  unsigned int y = drop().i;
+  push((cell)(y - x));
 };
 
 void orr(void) {
@@ -602,13 +604,13 @@ void primitives (void) {
 };
 
 #ifndef F_CPU
-unsigned int keyboard_modifier_keys;
+unsigned int keyboard_modifier_keys = 0;
 cell * keyboard_keys[6] = {0, 0, 0, 0, 0, 0};
 
 void usbsend(void) {
-  out("pressed: ");
+  printf("mods %u pressed: ", keyboard_modifier_keys);
   for(int i = 0; i < 6; i++) {
-    printf("%d ", keyboard_keys[i]);
+    printf("%u ", keyboard_keys[i]);
   }; out("\n");
 };
 
@@ -621,13 +623,13 @@ int main(void) {
   define_constant("pressedmodifiers", &keyboard_modifier_keys);
   define_constant("onboard", 0);
   define("portb", VARIABLE, 0);
-  define("portc", VARIABLE, 0);
   define("portd", VARIABLE, 0);
+  define("portf", VARIABLE, 0);
   define("ddrb", VARIABLE, 0);
-  define("ddrc", VARIABLE, 0);
   define("ddrd", VARIABLE, 0);
-  define("pinc", VARIABLE, 253);
-  define("pind", VARIABLE, 251);
+  define("ddrf", VARIABLE, 0);
+  define("pind", VARIABLE, 247);
+  define("pinf", VARIABLE, 253);
   define("usbsend", PRIMITIVE, &usbsend);
 
   while(gets(init_input)) {

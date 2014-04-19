@@ -23,6 +23,12 @@ a varying-width =variable= than traditional =allot=. There are
 probably other weird idiosyncrasies, but I'm not familiar enough with
 Forth to spot them.
 
+** Pinout
+
+- B0, B1, B2, B3: rows (top to bottom)
+- D0-7: first 8 columns (left to right)
+- F4, F5, F6: last three columns
+
 ** debouncing notes
    - for each row
      - delay
@@ -60,7 +66,8 @@ Forth to spot them.
    - ☑ comments
    - ☑ move forth source to flash
    - ☑ full matrix #6
-   - ☐ modifiers #10
+   - ☑ modifiers
+   - ☐ word execution keys #10
    - ☐ debounced matrix #7
    - ☐ layered matrix #8
    - ☐ interactive mode #9
