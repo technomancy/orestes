@@ -107,6 +107,14 @@ char maybe_unskip() {
         string_eq();
         if(drop().i) {
           elsee();
+        } else {
+          push((cell)entry->name);
+          push((cell)"if");
+          string_eq();
+          if(drop().i) {
+            conditional_depth++;
+            conditionals &= ~(1 << conditional_depth);
+          }
         }
       }
     }
@@ -320,8 +328,10 @@ void elsee(void) {
 };
 
 void then(void) {
-  conditional_depth--;
   conditionals |= (1 << conditional_depth);
+  if(--conditional_depth < 0) {
+    out("if/then mismatch");
+  }
 };
 
 void doo(void) {
@@ -380,7 +390,6 @@ void find(void) {
     string_eq();
     if(drop().i) {
       push((cell)cur);
-      db("found: "); db(target); db("\n");
       return;
     }
   }
