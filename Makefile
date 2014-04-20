@@ -14,8 +14,7 @@ build: inline
 
 SRC ?= orestes.fs
 inline:
-	ruby -ne 'n ||= 0; puts "const char code#{n}[] PROGMEM = \"#{$$_.chomp}\";" unless $$_.chomp.empty?; n += 1' orestes.fs > inlined_declare.c
-	ruby -ne 'n ||= 0; puts "strcpy_P(input, (char*)pgm_read_word(&code#{n})); run(input);" unless $$_.chomp.empty?; n += 1' orestes.fs > inlined_run.c
+	ruby -ne 'n ||= 0; puts "run(PSTR(\"#{$$_.chomp}\"));" unless $$_.chomp.empty?' orestes.fs > inlined.c
 
 local:
 	gcc -std=gnu99 -c $(TARGET).c -o $(TARGET).o

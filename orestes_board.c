@@ -78,14 +78,14 @@ void usbsend(void) {
   usb_keyboard_press(drop().i, keyboard_modifier_keys);
 };
 
-void run(char * s) {
-  input = s;
+void run(const char * s) {
+  for(int i = 0; i < 81; i++) {
+    input[i] = pgm_read_byte(s + i);
+  };
   while(*input) {
     interpret();
   }
 };
-
-#include "inlined_declare.c"
 
 int main (void) {
   primitives();
@@ -122,7 +122,9 @@ int main (void) {
 
   define_constant("onboard", 1);
 
-  #include "inlined_run.c"
+  delaysec();
+  input = malloc(81);
+  #include "inlined.c"
 
   delaysec();
 

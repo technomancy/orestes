@@ -245,6 +245,7 @@ void numout(void) {
   char * s = malloc(8);
   sprintf(s, "%u ", drop().i);
   out(s);
+  free(s);
 };
 
 
