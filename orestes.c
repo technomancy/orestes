@@ -253,7 +253,11 @@ void andd(void) {
 }
 
 void nott(void) {
-  push((cell)(~drop().i));
+  cell c = { .i = 1 };
+  if(drop().i) {
+    c.i = 0;
+  }
+  push(c);
 }
 
 void equals(void) {
