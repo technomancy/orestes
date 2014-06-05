@@ -207,6 +207,14 @@ void minus(void) {
   push((cell)(y - x));
 };
 
+void times(void) {
+  push((cell)(drop().i * drop().i));
+};
+
+void divided(void) {
+  push((cell)(drop().i / drop().i));
+};
+
 void orr(void) {
   push((cell)(drop().i | drop().i));
 }
@@ -557,6 +565,9 @@ void primitives (void) {
 
   define("+", PRIMITIVE, &plus);
   define("-", PRIMITIVE, &minus);
+  define("*", PRIMITIVE, &times);
+  define("/", PRIMITIVE, &divided);
+
   define("or", PRIMITIVE, &orr);
   define("and", PRIMITIVE, &andd);
   define("not", PRIMITIVE, &nott);
