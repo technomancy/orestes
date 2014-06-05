@@ -7,7 +7,7 @@ executable=$1
 success=0
 
 tests="add colon constvar no-conditional yes-conditional nested-if if-else"
-tests="$tests begin-again do-loop inc"
+tests="$tests begin-again do-loop inc roll"
 
 for test in $tests; do
     echo "Testing $test..."

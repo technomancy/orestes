@@ -161,12 +161,41 @@ void swap(void) {
   push(c2);
 };
 
+void rot(void) {
+  cell c1 = drop();
+  cell c2 = drop();
+  cell c3 = drop();
+  push(c2);
+  push(c1);
+  push(c3);
+};
+
 void over(void) {
   cell c1 = drop();
   cell c2 = drop();
   push(c2);
   push(c1);
   push(c2);
+};
+
+cell rollstar(int i) {
+  if(i) {
+    cell x = drop();
+    cell v = rollstar(i - 1);
+    push(x);
+    return v;
+  } else {
+    return drop();
+  }
+};
+
+void roll(void) {
+  push(rollstar(drop().i - 1));
+};
+
+void pick(void) {
+  cell n = drop();
+  push(*(stack.c - n.i));
 };
 
 void dot_s(void) {
@@ -366,7 +395,7 @@ void doo(void) {
 };
 
 void loop(void) {
-  if(++loop_counters[loop_depth] != loop_limits[loop_depth]) {
+  if(++loop_counters[loop_depth] < loop_limits[loop_depth]) {
     ip = loop_starts[loop_depth];
   } else {
     if(--loop_depth < 0) {
@@ -566,7 +595,10 @@ void primitives (void) {
   define("drop", PRIMITIVE, &drop);
   define("dup", PRIMITIVE, &dup);
   define("swap", PRIMITIVE, &swap);
+  define("rot", PRIMITIVE, &rot);
   define("over", PRIMITIVE, &over);
+  define("roll", PRIMITIVE, &roll);
+  define("pick", PRIMITIVE, &pick);
   define(".s", PRIMITIVE, &dot_s);
   define("@", PRIMITIVE, &fetch);
   define("!", PRIMITIVE, &store);
