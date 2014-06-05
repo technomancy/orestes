@@ -4,7 +4,7 @@
 #include "orestes.h"
 
 #define MAX_STACK 256 // in bytes
-#define MAX_WORD_SIZE 256 // in bytes
+#define MAX_WORD_SIZE 512 // in bytes
 
 cell stack_start = { .i = 0 };
 cell stack = { .i = 0 };
