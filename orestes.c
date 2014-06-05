@@ -256,6 +256,16 @@ void numout(void) {
   free(s);
 };
 
+void cr(void) {
+  printf("\n");
+};
+
+void rrand(void) {
+  unsigned int mod = drop().i;
+  cell x = { .i = (rand() % mod) };
+  push(x);
+};
+
 
 // parsing primitives
 
@@ -576,7 +586,10 @@ void primitives (void) {
   define("<", PRIMITIVE, &lessthan);
   define(">>", PRIMITIVE, &right_shift);
   define("<<", PRIMITIVE, &left_shift);
+  define("rand", PRIMITIVE, &rrand);
+
   define("numout", PRIMITIVE, &numout);
+  define("cr", PRIMITIVE, &cr);
 
   define(">number", PRIMITIVE, &to_number);
   define("word", PRIMITIVE, &word);
