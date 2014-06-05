@@ -73,19 +73,13 @@
     4@ collapse add 5 roll 4! ;
 
 : apply ( move -- )
-    ( TODO: extra rotations to work around 0 0 do noop loop bug )
-    4 + dup 0 do rotate loop
-    4 0 do applyrow loop
-    4 - 0 do rotate loop ;
-
-: move apply insert display ;
+    4 0 do applyrow loop ;
 
 : reset 4 0 do 0 0 0 0 board i 4 * + 4! loop ;
 
-: up 0 move ;
-: right 1 move ;
-: down 2 move ;
-: left 3 move ;
+: left apply insert display ;
+: up rotate rotate rotate apply rotate insert display ;
+: right rotate rotate apply rotate rotate insert display ;
+: down rotate apply rotate rotate rotate insert display ;
 
 insert display
-
