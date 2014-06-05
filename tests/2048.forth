@@ -10,7 +10,7 @@
 
 : 4@ ( loc -- w x y z )
     4 0 do
-        1 cells + dup @ swap
+        dup @ swap 1 cells +
     loop drop ;
 
 : 4! ( w x y z target -- )
@@ -36,7 +36,7 @@
 : display ( -- )
     4 0 do
         4 0 do
-            board j i 4 * + cells + @ numout
+            board i j 4 * + cells + @ numout
         loop
         cr
     loop cr ;
