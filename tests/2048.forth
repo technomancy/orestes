@@ -8,10 +8,6 @@
 0 0 0 0
 0 0 0 0 16 allot temp
 
-0 1 2 3 0 1 2 3 8 allot moves
-
-variable move moves move !
-
 : 4@ ( loc -- w x y z )
     4 0 do
         1 cells + dup @ swap
@@ -44,10 +40,6 @@ variable move moves move !
         loop
         cr
     loop cr ;
-
-: read ( -- n )
-    move @ @
-    move @ 1 cells + move ! ;
 
 : >board ( -- )
     16 0 do
@@ -86,8 +78,14 @@ variable move moves move !
     4 0 do applyrow loop
     4 - 0 do rotate loop ;
 
-: main insert display read apply ;
+: move apply insert display ;
 
 : reset 4 0 do 0 0 0 0 board i 4 * + 4! loop ;
 
-main main main main main main main main exit
+: up 0 move ;
+: right 1 move ;
+: down 2 move ;
+: left 3 move ;
+
+insert display
+
