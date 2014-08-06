@@ -5,6 +5,21 @@ I can write actual code.
 
 Install =gcc-avr= and run =make upload=.
 
+** Update
+
+Welp.
+
+Turns out running a Forth in a Teensy microcontroller that has 2.5kb
+of RAM is an unrealistic goal for a first-time Forth implementor. I'm
+sure it's possible to do with some extreme cleverness, but at the
+moment I'm admitting defeat and moving on.
+
+Note that the interpreter _does_ load and can run simple programs, but
+it runs out of memory about 20% of the way into the code for the
+keyboard controller. For the time being I've [[https://github.com/technomancy/atreus-firmware][ported my firmware to C]],
+though I would like to finish this at some point in the future once I
+get a chance to upgrade to [[https://mchck.org/][a more capable microcontroller]].
+
 ** Caveats
 
 This Forth dialect is a bit weird for two reasons: 0) it's designed to
