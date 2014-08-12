@@ -1,4 +1,6 @@
+*.o
+*.d
+*.elf
+*.hex
+*.ld
 /orestes
-/orestes.hex
-/*.o
-/inlined.c

@@ -1,5 +1,12 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#ifdef F_CPU
+#include "teensy3/usb_keyboard.h"
+// #include "teensy3/usb_dev.h"
+#include "teensy3/core_pins.h"
+#endif
 
 #include "orestes.h"
 
@@ -25,7 +32,7 @@ char conditional_depth = 0;
 unsigned int loop_counters[16];
 unsigned int loop_limits[16];
 cell loop_starts[16];
-char loop_depth = 0;
+unsigned char loop_depth = 0;
 
 
 // helper functions
@@ -85,7 +92,7 @@ void define_constant(char * name, int value) {
   }
 };
 
-char maybe_unskip() {
+void maybe_unskip() {
   dict * entry = drop().d;
 
   if(entry && entry->type == PRIMITIVE) {
@@ -199,11 +206,15 @@ void pick(void) {
 };
 
 void dot_s(void) {
-  printf("<%ld> ", stack.c - stack_start.c);
+  char * s = malloc(8);
+  sprintf(s, "<%ld> ", (long int)(stack.c - stack_start.c));
+  out(s);
   for(cell i = stack_start; i.i < stack.i; i.c++) {
-    printf("%u ", i.c->i);
+    sprintf(s, "%u ", i.c->i);
+    out(s);
   }
-  printf("\n");
+  free(s);
+  out("\n");
 };
 
 void fetch(void) {
@@ -290,7 +301,7 @@ void numout(void) {
 };
 
 void cr(void) {
-  printf("\n");
+  out("\n");
 };
 
 void rrand(void) {
@@ -307,7 +318,7 @@ void to_number(void) {
   cell n = {.i = 0};
 
   if(*in) {
-    for(char i = 0; in[i]; i++) {
+    for(unsigned char i = 0; in[i]; i++) {
       if(in[i] >= 48 && in[i] < 58) {
         n.i *= 10;
         n.i += (in[i] - 48);
@@ -327,7 +338,7 @@ void to_number(void) {
 };
 
 void word(void) {
-  char i = 0;
+  unsigned char i = 0;
   char * new_str = 0;
 
   // if we're on space, advance
@@ -336,8 +347,8 @@ void word(void) {
   // skip till space or newline or null
   while(input[i] != 32 && input[i] != 10 && input[i]) { i++; };
 
-  if(new_str = malloc(i + 1)) {
-    for(char j = 0; j < i; j++) {
+  if((new_str = malloc(i + 1))) {
+    for(unsigned char j = 0; j < i; j++) {
       new_str[j] = input[j];
     }
     new_str[i] = 0; // slap a null terminator on
@@ -664,14 +675,65 @@ void primitives (void) {
 
 };
 
-#ifndef F_CPU
+
+
+#ifdef F_CPU
+void blink(void) {
+  digitalWrite(13, HIGH);
+  delay(drop().i);
+  digitalWrite(13, LOW);
+};
+
+void blink2(void) {
+  digitalWrite(13, HIGH);
+  delay(200);
+  digitalWrite(13, LOW);
+};
+
+void out(char * s) {
+  while(*s) { // gotta be a better way for this
+    if(*s < 123 && *s > 96) {
+      usb_keyboard_press(((*s - 97) + 4) | 0x4000, 0);
+    } else if(*s == 32) {
+      usb_keyboard_press(KEY_SPACE, 0);
+    } else if(*s == 58) {
+      usb_keyboard_press(KEY_SEMICOLON, KEY_SHIFT);
+    } else if(*s == 48) {
+      usb_keyboard_press(KEY_0, 0);
+    } else if(*s > 48 && *s < 58) {
+      usb_keyboard_press((*s - 19) | 4000, 0);
+    }
+    s++;
+  };
+  usb_keyboard_press(KEY_SPACE, 0);
+  usb_keyboard_press(KEY_SLASH, 0);
+  usb_keyboard_press(KEY_SPACE, 0);
+};
+
+int main (void) {
+  pinMode(13, OUTPUT);
+
+  primitives();
+  // usb_init();
+  // delay(500);
+
+  define("blink", PRIMITIVE, &blink);
+  blink2();
+  input = "500 blink 100 blink 2000 blink ";
+  interpret();
+  blink2();
+  return 0;
+};
+#else
+
+// for running on a PC
 unsigned int keyboard_modifier_keys = 0;
 cell * keyboard_keys[6] = {0, 0, 0, 0, 0, 0};
 
 void usbsend(void) {
-  printf("mods %u pressed: ", keyboard_modifier_keys);
+  out("mods %u pressed: ", keyboard_modifier_keys);
   for(int i = 0; i < 6; i++) {
-    printf("%u ", keyboard_keys[i]);
+    out("%u ", keyboard_keys[i]);
   }; out("\n");
 };
 

@@ -3,33 +3,19 @@
 I need to implement a Forth so I can write firmware for [[https://github.com/technomancy/atreus][my keyboard]] so
 I can write actual code.
 
-Install =gcc-avr= and run =make upload=.
+** Teensy 3
 
-** Update
-
-Welp.
-
-Turns out running a Forth in a Teensy microcontroller that has 2.5kb
-of RAM is an unrealistic goal for a first-time Forth implementor. I'm
-sure it's possible to do with some extreme cleverness, but at the
-moment I'm admitting defeat and moving on.
-
-Note that the interpreter _does_ load and can run simple programs, but
-it runs out of memory about 20% of the way into the code for the
-keyboard controller. For the time being I've [[https://github.com/technomancy/atreus-firmware][ported my firmware to C]],
-though I would like to finish this at some point in the future once I
-get a chance to upgrade to [[https://mchck.org/][a more capable microcontroller]].
+This is currently in the middle of a port from the AVR Teensy 2 to the
+ARM Teensy 3, and it's not exactly functional yet.
 
 ** Caveats
 
-This Forth dialect is a bit weird for two reasons: 0) it's designed to
-run on a chip that has 32kb of flash for storage of C programs but
-only 2.5kb of RAM for Forth programs and data combined. Because of
-this, it is less self-hosting than is traditional. There are other
-Forths for AVR that store Forth code in flash, but as far as I can
-tell they all require wiping the bootloader, which I don't want to
-do. 1) It's also implemented by someone who has barely used Forth and
-doesn't really know C.
+This Forth dialect is a bit weird for two reasons: 0) it was
+originally designed to run on a chip that has 32kb of flash for
+storage of C programs but only 2.5kb of RAM for Forth programs and
+data combined. Because of this, it is less self-hosting than is
+traditional. 1) It's also implemented by someone who has barely used
+Forth and doesn't really know C.
 
 We use malloc rather than managing our own heap. This gives us a bit
 more flexibility, but it also means things like =allot= can't just
@@ -39,10 +25,8 @@ probably other weird idiosyncrasies, but I'm not familiar enough with
 Forth to spot them.
 
 ** Pinout
-
-- B0, B1, B2, B3: rows (top to bottom)
-- D0-7: first 8 columns (left to right)
-- F4, F5, F6: last three columns
+*** rows: 14, 15, 20, 21
+*** cols: 0-8, 11, 12
 
 ** debouncing notes
    - for each row
@@ -54,35 +38,3 @@ Forth to spot them.
        - decrement debounce counter
        - if decremented to zero
          - set the current matrix row to the last read value
-
-** steps
-   - ☑ .s
-   - ☑ push a number onto the stack
-   - ☑ call a primitive
-   - ☑ call a primitive with an arg
-   - ☑ easy way to load primitives into the dictionary
-   - ☑ store and fetch
-   - ☑ define a constant
-   - ☑ define a variable
-   - ☑ define a word
-   - ☑ conditions
-   - ☑ null-terminated strings
-   - ☑ read programs from stdin
-   - ☑ nested if
-   - ☑ else
-   - ☑ loops
-   - ☑ store and fetch single bytes
-   - ☑ run on the board
-   - ☑ LED blink
-   - ☑ send hard-coded USB key codes
-   - ☑ send hard-coded USB key codes from forth #4
-   - ☑ send key codes by column
-   - ☑ read forth source from separate file instead of inline strings #3
-   - ☑ comments
-   - ☑ move forth source to flash
-   - ☑ full matrix #6
-   - ☑ modifiers
-   - ☐ word execution keys #10
-   - ☐ debounced matrix #7
-   - ☐ layered matrix #8
-   - ☐ interactive mode #9
