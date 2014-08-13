@@ -34,8 +34,6 @@ unsigned int loop_limits[16];
 cell loop_starts[16];
 unsigned char loop_depth = 0;
 
-void blinky(int t);
-
 
 // helper functions
 
@@ -569,9 +567,7 @@ void interpret(void) {
     db("entry ");
     free(drop().s);
     push((cell)entry);
-    blinky(1000);
     execute();
-    blinky(1000);
   } else {
     if(compiling) {
       to_number();
@@ -584,12 +580,10 @@ void interpret(void) {
         add_to_definition();
       }
     } else {
-      blinky(100);
       to_number();
       if(!drop().i) {
         out("unknown thingy\n");
       } else {
-        blinky(100);
         db("num\n");
       }
     }
@@ -678,7 +672,13 @@ void primitives (void) {
   define("noop", PRIMITIVE, &noop);
   define("(", PRIMITIVE, &comment); cp->type = IMMEDIATE;
   define_constant("debug", (int)&debug);
+};
 
+void run(char * s) {
+  input = s;
+  while(*input) {
+    interpret();
+  }
 };
 
 
@@ -690,13 +690,6 @@ void blink(void) {
   delay(drop().i);
   digitalWrite(13, LOW);
   delay(drop().i);
-};
-
-void blinky(int t) {
-  /* digitalWrite(13, HIGH); */
-  /* delay(t); */
-  /* digitalWrite(13, LOW); */
-  /* delay(t); */
 };
 
 void out(char * s) {
@@ -747,10 +740,7 @@ int main (void) {
     interpret();
   }
 
-  input = ": m begin 12 read 13 write 100 delay again ; m";
-  while(*input) {
-    interpret();
-  }
+#include "inlined.cfs"
 
   return 0;
 };

@@ -42,6 +42,11 @@ all: build
 
 build: $(TARGET).hex
 
+SRC ?= orestes.fs
+inline.cfs:
+	ruby -ne 'n ||= 0; puts "run(\"#{$$_.chomp}\");" unless $$_.chomp.empty?' orestes.fs > inlined.cfs
+
+
 upload: build
 	teensy_loader_cli -mmcu=mk20dx128 -w $(TARGET).hex
 
@@ -58,8 +63,10 @@ $(TARGET).elf: $(OBJS) teensy3/mk20dx128.ld
 # compiler generated dependency info
 -include $(OBJS:.o=.d)
 
+orestes.c: inline.cfs
+
 clean:
-	rm -f *.o *.d teensy3/*.o teensy3/*.d $(TARGET).elf $(TARGET).hex local/$(TARGET)
+	rm -f *.o *.d teensy3/*.o teensy3/*.d $(TARGET).elf $(TARGET).hex local/$(TARGET) inlined.c
 
 local: local/$(TARGET).o
 	mkdir -p local

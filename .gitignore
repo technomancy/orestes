@@ -4,3 +4,4 @@
 *.hex
 *.ld
 /orestes
+/inlined.cfs
