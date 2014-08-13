@@ -27,6 +27,11 @@ Forth to spot them.
 ** Pinout
 *** rows: 14, 15, 20, 21
 *** cols: 0-8, 11, 12
+*** open pins:
+    - 9,10: PWM, serial
+    - 13: LED
+    - 16-19: analog, I2C, touch
+    - 22, 23: analog, PWM, touch
 
 ** debouncing notes
    - for each row

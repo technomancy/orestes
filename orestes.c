@@ -34,6 +34,8 @@ unsigned int loop_limits[16];
 cell loop_starts[16];
 unsigned char loop_depth = 0;
 
+void blinky(int t);
+
 
 // helper functions
 
@@ -567,7 +569,9 @@ void interpret(void) {
     db("entry ");
     free(drop().s);
     push((cell)entry);
+    blinky(1000);
     execute();
+    blinky(1000);
   } else {
     if(compiling) {
       to_number();
@@ -580,10 +584,12 @@ void interpret(void) {
         add_to_definition();
       }
     } else {
+      blinky(100);
       to_number();
       if(!drop().i) {
         out("unknown thingy\n");
       } else {
+        blinky(100);
         db("num\n");
       }
     }
@@ -679,15 +685,18 @@ void primitives (void) {
 
 #ifdef F_CPU
 void blink(void) {
+  dup();
   digitalWrite(13, HIGH);
   delay(drop().i);
   digitalWrite(13, LOW);
+  delay(drop().i);
 };
 
-void blink2(void) {
-  digitalWrite(13, HIGH);
-  delay(200);
-  digitalWrite(13, LOW);
+void blinky(int t) {
+  /* digitalWrite(13, HIGH); */
+  /* delay(t); */
+  /* digitalWrite(13, LOW); */
+  /* delay(t); */
 };
 
 void out(char * s) {
@@ -697,7 +706,7 @@ void out(char * s) {
     } else if(*s == 32) {
       usb_keyboard_press(KEY_SPACE, 0);
     } else if(*s == 58) {
-      usb_keyboard_press(KEY_SEMICOLON, KEY_SHIFT);
+      usb_keyboard_press(KEY_SEMICOLON, KEY_LEFT_SHIFT);
     } else if(*s == 48) {
       usb_keyboard_press(KEY_0, 0);
     } else if(*s > 48 && *s < 58) {
@@ -710,18 +719,39 @@ void out(char * s) {
   usb_keyboard_press(KEY_SPACE, 0);
 };
 
+void read(void) {
+  cell v = { .i = digitalRead(drop().i) };
+  push(v);
+};
+
+void write(void) {
+  digitalWrite(drop().i, drop().i);
+};
+
+void delayy(void) {
+  delay(drop().i);
+};
+
 int main (void) {
-  pinMode(13, OUTPUT);
-
   primitives();
-  // usb_init();
-  // delay(500);
 
+  pinMode(13, OUTPUT);
+  pinMode(12, INPUT_PULLUP);
   define("blink", PRIMITIVE, &blink);
-  blink2();
-  input = "500 blink 100 blink 2000 blink ";
-  interpret();
-  blink2();
+  define("read", PRIMITIVE, &read);
+  define("write", PRIMITIVE, &write);
+  define("delay", PRIMITIVE, &delayy);
+
+  input = "500 blink 500 blink 500 blink";
+  while(*input) {
+    interpret();
+  }
+
+  input = ": m begin 12 read 13 write 100 delay again ; m";
+  while(*input) {
+    interpret();
+  }
+
   return 0;
 };
 #else
