@@ -697,19 +697,19 @@ void out(char * s) {
     if(*s < 123 && *s > 96) {
       usb_keyboard_press(((*s - 97) + 4) | 0x4000, 0);
     } else if(*s == 32) {
-      usb_keyboard_press(KEY_SPACE, 0);
+      usb_keyboard_press((uint8_t)KEY_SPACE, 0);
     } else if(*s == 58) {
-      usb_keyboard_press(KEY_SEMICOLON, KEY_LEFT_SHIFT);
+      usb_keyboard_press((uint8_t)KEY_SEMICOLON, (uint8_t)KEY_LEFT_SHIFT);
     } else if(*s == 48) {
-      usb_keyboard_press(KEY_0, 0);
+      usb_keyboard_press((uint8_t)KEY_0, 0);
     } else if(*s > 48 && *s < 58) {
       usb_keyboard_press((*s - 19) | 4000, 0);
     }
     s++;
   };
-  usb_keyboard_press(KEY_SPACE, 0);
-  usb_keyboard_press(KEY_SLASH, 0);
-  usb_keyboard_press(KEY_SPACE, 0);
+  usb_keyboard_press((uint8_t)KEY_SPACE, 0);
+  usb_keyboard_press((uint8_t)KEY_SLASH, 0);
+  usb_keyboard_press((uint8_t)KEY_SPACE, 0);
 };
 
 void read(void) {
