@@ -684,6 +684,8 @@ void run(char * s) {
 
 
 #ifdef F_CPU
+#include "board.h"
+
 void blink(void) {
   dup();
   digitalWrite(13, HIGH);
@@ -725,6 +727,10 @@ void delayy(void) {
   delay(drop().i);
 };
 
+void debounce_f(void) {
+  debounce(drop().i);
+};
+
 int main (void) {
   primitives();
 
@@ -735,12 +741,17 @@ int main (void) {
   define("write", PRIMITIVE, &write);
   define("delay", PRIMITIVE, &delayy);
 
-  input = "500 blink 500 blink 500 blink";
+  define("clear", PRIMITIVE, &clear_keys);
+  define("debounce", PRIMITIVE, &debounce_f);
+  define("preinvoke", PRIMITIVE, &pre_invoke_functions);
+  define("presses", PRIMITIVE, &calculate_presses);
+
+  init();
+
+  input = ": m begin clear 20 debounce preinvoke presses usbsend again ; m";
   while(*input) {
     interpret();
   }
-
-#include "inlined.cfs"
 
   return 0;
 };
