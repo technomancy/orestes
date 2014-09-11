@@ -7,3 +7,4 @@ void clear_keys();
 void debounce(int passes_remaining);
 void pre_invoke_functions();
 void calculate_presses();
+void board_main();

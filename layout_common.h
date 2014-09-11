@@ -1,7 +1,7 @@
 int fn_decay = 0;
 
 void activate_fn() {
-  fn_decay = 20;
+  fn_decay = 10;
 };
 
 int layer_to_jump = 0;

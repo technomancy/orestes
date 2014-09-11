@@ -23,7 +23,7 @@ int presses[KEY_COUNT];
 int last_pressed_count = 0;
 int last_presses[KEY_COUNT];
 
-int rows_pinout[] = {14, 15, 20, 21};
+int rows_pinout[] = {23, 22, 19, 18};
 int cols_pinout[] = {12, 11, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
 // layout.h must define:
@@ -36,7 +36,15 @@ int cols_pinout[] = {12, 11, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
 // Matrix scanning logic
 
+void blink() {
+  digitalWrite(13, HIGH);
+  delay(100);
+  digitalWrite(13, LOW);
+  delay(100);
+};
+
 void record(int col, int row) {
+  if(row == 3 && col == 0) reset();
   presses[pressed_count++] = (row * COL_COUNT) + col;
 };
 
@@ -49,14 +57,13 @@ void activate_row(int row) {
 
 void scan_row(int row) {
   for(int col = 0; col < COL_COUNT; col++) {
-    if(digitalRead(cols_pinout[col])) {
+    if(!digitalRead(cols_pinout[col])) {
       record(col, row);
     }
   }
 };
 
 void scan_rows() {
-  pressed_count = 0;
   for(int i = 0; i < ROW_COUNT; i++) {
     activate_row(i);
     scan_row(i);
@@ -72,6 +79,7 @@ void debounce(int passes_remaining) {
     for(int i = 0; i < last_pressed_count; i++) {
       last_presses[i] = presses[i];
     }
+    pressed_count = 0;
 
     scan_rows();
 
@@ -106,16 +114,26 @@ void calculate_presses() {
     } else if(keycode >= 136 && keycode < 200) {
       // layer set
       current_layer_number = keycode - 136;
-    } else if(keycode > 100 && keycode <= 108) {
-      // modifier
-      keyboard_modifier_keys |= (keycode - 100);
-    } else if(keycode > 255 && usb_presses < 6) {
+    /* } else if(keycode == MODIFIERKEY_CTRL) { */
+    /*   keyboard_modifier_keys |= 1; */
+    /* } else if(keycode == MODIFIERKEY_SHIFT) { */
+    /*   keyboard_modifier_keys |= 2; */
+    /* } else if(keycode == MODIFIERKEY_ALT) { */
+    /*   keyboard_modifier_keys |= 4; */
+    /* } else if(keycode == MODIFIERKEY_GUI) { */
+    /*   keyboard_modifier_keys |= 8; */
+    } else if(keycode > 0x8000) {
+      (keycode & 0x01) && (keyboard_modifier_keys |= 1);
+      (keycode & 0x02) && (keyboard_modifier_keys |= 2);
+      (keycode & 0x04) && (keyboard_modifier_keys |= 4);
+      (keycode & 0x08) && (keyboard_modifier_keys |= 8);
+    } else if(keycode > MODIFIERKEY_SHIFT && usb_presses < 6) {
       // modifier plus keypress
-      keyboard_modifier_keys |= (keycode >> 8);
-      keyboard_keys[usb_presses++] = (keycode & 255);
+      keyboard_modifier_keys |= 2;
+      keyboard_keys[usb_presses++] = (keycode - MODIFIERKEY_SHIFT);
     } else if(usb_presses < 6){
       // keypress
-      keyboard_keys[usb_presses++] = keycode;
+      keyboard_keys[usb_presses++] = (keycode & 255);
     };
   };
 };
@@ -140,17 +158,18 @@ void init() {
   }
 };
 
-/* int main() { */
-/*   init(); */
-/*   while(1) { */
-/*     clear_keys(); */
-/*     debounce(DEBOUNCE_PASSES); */
-/*     pre_invoke_functions(); */
-/*     calculate_presses(); */
-/*     usb_keyboard_send(); */
-/*   }; */
-/* }; */
+void board_main() {
+  init();
+  while(1) {
+    clear_keys();
+    debounce(DEBOUNCE_PASSES);
+    pre_invoke_functions();
+    calculate_presses();
+
+    usb_keyboard_send();
+  };
+};
 
 void reset(void) {
-  // TODO
+  _reboot_Teensyduino_();
 };

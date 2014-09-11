@@ -686,14 +686,6 @@ void run(char * s) {
 #ifdef F_CPU
 #include "board.h"
 
-void blink(void) {
-  dup();
-  digitalWrite(13, HIGH);
-  delay(drop().i);
-  digitalWrite(13, LOW);
-  delay(drop().i);
-};
-
 void out(char * s) {
   while(*s) { // gotta be a better way for this
     if(*s < 123 && *s > 96) {
@@ -732,11 +724,14 @@ void debounce_f(void) {
 };
 
 int main (void) {
+  pinMode(13, OUTPUT);
+  usb_keyboard_press((uint8_t)KEY_A, 0);
+  board_main();
   primitives();
 
   pinMode(13, OUTPUT);
   pinMode(12, INPUT_PULLUP);
-  define("blink", PRIMITIVE, &blink);
+  // define("blink", PRIMITIVE, &blink);
   define("read", PRIMITIVE, &read);
   define("write", PRIMITIVE, &write);
   define("delay", PRIMITIVE, &delayy);
