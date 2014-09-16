@@ -6,7 +6,7 @@
 
 #include "board.h"
 
-#define DEBOUNCE_PASSES 10
+#define DEBOUNCE_PASSES 30
 
 
 // Layout setup
@@ -44,7 +44,7 @@ void blink() {
 };
 
 void record(int col, int row) {
-  if(row == 3 && col == 0) reset();
+  if(row == 3 && col == 0) reset(); // TODO: remove this once debugged
   presses[pressed_count++] = (row * COL_COUNT) + col;
 };
 
@@ -52,7 +52,7 @@ void activate_row(int row) {
   for(int i = 0; i < ROW_COUNT; i++) {
     digitalWrite(rows_pinout[i], !(i == row));
   };
-  delay(1);
+  delay(0.2);
 };
 
 void scan_row(int row) {
@@ -114,21 +114,11 @@ void calculate_presses() {
     } else if(keycode >= 136 && keycode < 200) {
       // layer set
       current_layer_number = keycode - 136;
-    /* } else if(keycode == MODIFIERKEY_CTRL) { */
-    /*   keyboard_modifier_keys |= 1; */
-    /* } else if(keycode == MODIFIERKEY_SHIFT) { */
-    /*   keyboard_modifier_keys |= 2; */
-    /* } else if(keycode == MODIFIERKEY_ALT) { */
-    /*   keyboard_modifier_keys |= 4; */
-    /* } else if(keycode == MODIFIERKEY_GUI) { */
-    /*   keyboard_modifier_keys |= 8; */
-    } else if(keycode > 0x8000) {
-      (keycode & 0x01) && (keyboard_modifier_keys |= 1);
-      (keycode & 0x02) && (keyboard_modifier_keys |= 2);
-      (keycode & 0x04) && (keyboard_modifier_keys |= 4);
-      (keycode & 0x08) && (keyboard_modifier_keys |= 8);
+    } else if(keycode > 0x8000 && keycode < 0x8010) {
+      keyboard_modifier_keys |= (keycode & 0x0f);
     } else if(keycode > MODIFIERKEY_SHIFT && usb_presses < 6) {
       // modifier plus keypress
+      // TODO: this should be fixed to work with other modifiers
       keyboard_modifier_keys |= 2;
       keyboard_keys[usb_presses++] = (keycode - MODIFIERKEY_SHIFT);
     } else if(usb_presses < 6){
