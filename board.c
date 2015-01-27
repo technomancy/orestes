@@ -44,7 +44,7 @@ void blink() {
 };
 
 void record(int col, int row) {
-  if(row == 3 && col == 0) reset(); // TODO: remove this once debugged
+  // if(row == 3 && col == 0) reset(); // TODO: remove this once debugged
   presses[pressed_count++] = (row * COL_COUNT) + col;
 };
 
