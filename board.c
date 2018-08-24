@@ -150,6 +150,9 @@ void init() {
 
 void board_main() {
   init();
+  keyboard_keys[0] = KEY_NUM_LOCK;
+  usb_keyboard_send();
+  keyboard_keys[0] = 0;
   while(1) {
     clear_keys();
     debounce(DEBOUNCE_PASSES);
