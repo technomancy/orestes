@@ -31,7 +31,7 @@ int cols_pinout[] = {12, 11, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 // * layer_functions: array of void function pointers
 // ... plus any functions included in layer_functions
 // per_cycle void function callback
-#include "layout.h"
+#include "layout_qwerty.h"
 
 
 // Matrix scanning logic
