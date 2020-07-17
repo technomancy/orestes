@@ -3,6 +3,10 @@
 I need to implement a Forth so I can write firmware for [[https://github.com/technomancy/atreus][my keyboard]] so
 I can write actual code.
 
+Instead of using this, it's probably better to check out
+[[https://git.sr.ht/~technomancy/menelaus][menelaus]] which is written
+in MicroScheme. But it could be interesting as a historical curiosity.
+
 ** Teensy 3
 
 This is currently in the middle of a port from the AVR Teensy 2 to the
